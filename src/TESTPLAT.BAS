@@ -8,17 +8,17 @@ END TYPE
 TYPE Anim
     index AS INTEGER
     num_frames AS INTEGER
-    speed AS INTEGER
-    t_speed AS INTEGER
+    dur AS INTEGER
+    t_dur AS INTEGER
 END TYPE
 
 CONST true = -1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_ESC = 27
 
-DIM SHARED Player AS Object
-
 REDIM SHARED Sprites(0) AS LONG
 REDIM SHARED Anims(0) AS Anim
+
+DIM SHARED Player AS Object
 
 Main
 
@@ -34,8 +34,7 @@ END SUB
 SUB Init_Screen
     display& = _NEWIMAGE(640, 480, 32)
     SCREEN display&
-'    _SCREENMOVE -1200, -200
-
+    '    _SCREENMOVE -1200, -200
 END SUB
 
 SUB Init_Player
@@ -48,53 +47,49 @@ END SUB
 SUB Game_Loop
     DO
         CLS
-        PRINT
-        PRINT
 
-        IF INKEY$ = CHR$(0) + CHR$(77) THEN
-            Player.anim = Player.anim + 1
-            IF Player.anim > 1 THEN Player.anim = 0
-            Player.frame = 0
-            Anims(Player.anim).t_speed = 0
+        IF _KEYDOWN(KEY_RIGHT) THEN
+            IF Player.anim <> 1 THEN Set_Anim Player, 1
+        ELSE
+            IF Player.anim <> 0 THEN Set_Anim Player, 0
         END IF
 
         Draw_Obj Player
+        Anim_Update Player
 
-
-
-        'next frame
-        Anims(Player.anim).t_speed = Anims(Player.anim).t_speed + 1
-
-        PRINT "t_speed", Anims(Player.anim).t_speed
-
-        IF Anims(Player.anim).t_speed >= Anims(Player.anim).speed THEN
-            Anims(Player.anim).t_speed = 0
-
-
-
-            Player.frame = Player.frame + 1
-
-            IF Player.frame > Anims(Player.anim).num_frames THEN
-                Player.frame = 0
-            END IF
-
-
-
-
-        END IF
-
-
-
-
-        _PUTIMAGE (0, 0)-(640, 480), display&, display&, (0, 0)-(320, 240)
-
-        _DISPLAY
-        _LIMIT 60
+        Draw_Screen
     LOOP UNTIL _KEYDOWN(27)
 END SUB
 
+SUB Set_Anim (Obj AS Object, anim)
+    Obj.anim = anim
+    Reset_Anim Obj
+END SUB
+
+SUB Reset_Anim (Obj AS Object)
+    Obj.frame = 0
+    Anims(Obj.anim).t_dur = 0
+END SUB
+
+SUB Draw_Screen
+    _PUTIMAGE (0, 0)-(640, 480), display&, display&, (0, 0)-(320, 240)
+    _DISPLAY
+    _LIMIT 60
+END SUB
+
+SUB Anim_Update (Obj AS Object)
+    Anims(Player.anim).t_dur = Anims(Player.anim).t_dur + 1
+
+    IF Anims(Player.anim).t_dur >= Anims(Player.anim).dur THEN
+        Anims(Player.anim).t_dur = 0
+
+        Player.frame = Player.frame + 1
+
+        IF Player.frame > Anims(Player.anim).num_frames THEN Player.frame = 0
+    END IF
+END SUB
+
 SUB Draw_Obj (Obj AS Object)
-    PRINT "frame", Player.frame
     frame = Anims(Obj.anim).index + Player.frame
 
     _PUTIMAGE (Obj.x, Obj.y), Sprites(frame)
@@ -107,15 +102,15 @@ SUB Init_Sprites
     Load_Anim 5, "adventurer-run3-0", 6
 END SUB
 
-SUB Load_Anim (speed, filename$, num_frames)
+SUB Load_Anim (dur, filename$, num_frames)
     SHARED spr_index, anim_index
 
     REDIM _PRESERVE Anims(anim_index) AS Anim
 
     Anims(anim_index).index = spr_index
     Anims(anim_index).num_frames = num_frames - 1
-    Anims(anim_index).speed = speed
-    Anims(anim_index).t_speed = 0
+    Anims(anim_index).dur = dur
+    Anims(anim_index).t_dur = 0
 
     anim_index = anim_index + 1
 
