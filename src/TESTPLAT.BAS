@@ -1,3 +1,6 @@
+'Made by @Tsugumo_BPO
+'Do whatever you want with this, I'm just having fun trying out QB64 :)
+
 TYPE Object
     x AS SINGLE
     y AS SINGLE
