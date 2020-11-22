@@ -32,8 +32,10 @@ SUB Main
 END SUB
 
 SUB Init_Screen
-    SCREEN _NEWIMAGE(640, 480, 32)
-    _SCREENMOVE -1200, -200
+    display& = _NEWIMAGE(640, 480, 32)
+    SCREEN display&
+'    _SCREENMOVE -1200, -200
+
 END SUB
 
 SUB Init_Player
@@ -84,7 +86,7 @@ SUB Game_Loop
 
 
 
-
+        _PUTIMAGE (0, 0)-(640, 480), display&, display&, (0, 0)-(320, 240)
 
         _DISPLAY
         _LIMIT 60
