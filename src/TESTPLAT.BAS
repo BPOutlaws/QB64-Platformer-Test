@@ -16,7 +16,7 @@ TYPE Object
 END TYPE
 
 TYPE Anim
-    index AS INTEGER
+    spr_index AS INTEGER
     num_frames AS INTEGER
     dur AS INTEGER
     t_dur AS INTEGER
@@ -49,6 +49,7 @@ Init_Player
 DO
     Draw_BG
     Do_Input
+    Camera_Update
     Draw_Obj player
     Anim_Update player
     Draw_Screen
@@ -75,7 +76,6 @@ END SUB
 SUB Do_Input
     Input_Move
     Input_Attack
-    Camera_Update
 END SUB
 
 SUB Input_Move
@@ -122,15 +122,17 @@ END SUB
 ' OBJECTS
 '_____________________________________________________________________________
 SUB Draw_Obj (Obj AS Object)
-    frame = Anims(Obj.anim).index + Obj.frame
+    frame = Anims(Obj.anim).spr_index + Obj.frame
     sprite& = Sprites(frame)
 
     w = _WIDTH(sprite&) * Obj.h_flip
     h = _HEIGHT(sprite&)
     x_off = Obj.x_off * w
     y_off = Obj.y_off * h
+    x = Obj.x - x_off
+    y = Obj.y - y_off
 
-    _PUTIMAGE (Obj.x - x_off, Obj.y - y_off)-(Obj.x - x_off + w, Obj.y - y_off + h), sprite&
+    _PUTIMAGE (x, y)-(x + w, y + h), sprite&
 END SUB
 
 
@@ -162,7 +164,7 @@ SUB Init_Anims
     spr_index = 0: anim_index = 0
 
     Load_Anim 10, "adventurer-idle-2-0", 4
-    Load_Anim 5, "adventurer-run3-0", 6
+    Load_Anim 1, "adventurer-run3-0", 6
     Load_Anim 5, "adventurer-attack2-0", 6
 END SUB
 
@@ -171,7 +173,7 @@ SUB Load_Anim (dur, filename$, num_frames)
 
     REDIM _PRESERVE Anims(anim_index) AS Anim
 
-    Anims(anim_index).index = spr_index
+    Anims(anim_index).spr_index = spr_index
     Anims(anim_index).num_frames = num_frames - 1
     Anims(anim_index).dur = dur
     Anims(anim_index).t_dur = 0
