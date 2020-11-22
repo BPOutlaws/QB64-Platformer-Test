@@ -1,6 +1,12 @@
 TYPE Object
     x AS SINGLE
     y AS SINGLE
+    x_off AS SINGLE
+    y_off AS SINGLE
+    h_flip AS INTEGER
+    h_speed AS SINGLE
+    h_speed_max AS SINGLE
+    friction AS SINGLE
     anim AS INTEGER
     frame AS INTEGER
 END TYPE
@@ -12,90 +18,124 @@ TYPE Anim
     t_dur AS INTEGER
 END TYPE
 
-CONST true = -1
+TYPE Camera
+    x AS SINGLE
+    y AS SINGLE
+END TYPE
+
+CONST true = -1, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_ESC = 27
+CONST ANIM_IDLE = 0, ANIM_RUN = 1
 
-REDIM SHARED Sprites(0) AS LONG
-REDIM SHARED Anims(0) AS Anim
+REDIM SHARED bg AS LONG, Sprites(0) AS LONG, Anims(0) AS Anim
+DIM SHARED player AS Object, camera AS Camera
 
-DIM SHARED Player AS Object
 
-Main
 
-SUB Main
-    Init_Screen
-    Init_Sprites
-    Init_Player
-    Game_Loop
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' GAMEPLAY
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
+Init_Screen
+Init_BG
+Init_Camera
+Init_Anims
+Init_Player
 
-    Cleanup_Sprites
-END SUB
+DO
+    Draw_BG
+    Do_Input
+    Draw_Obj player
+    Anim_Update player
+    Draw_Screen
+LOOP UNTIL _KEYDOWN(KEY_ESC)
 
-SUB Init_Screen
-    display& = _NEWIMAGE(640, 480, 32)
-    SCREEN display&
-    '    _SCREENMOVE -1200, -200
-END SUB
+Cleanup_Sprites
 
+
+
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' PLAYER
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
 SUB Init_Player
-    Player.x = 0
-    Player.y = 0
-    Player.anim = 0
-    Player.frame = 0
+    player.x = 80
+    player.y = 208
+    player.x_off = 0.5
+    player.y_off = 1
+    player.h_flip = 1
+    player.h_speed = 0
+    player.h_speed_max = 4
+    player.friction = 0.9
+    player.anim = 0
+    player.frame = 0
 END SUB
 
-SUB Game_Loop
-    DO
-        CLS
+SUB Do_Input
 
-        IF _KEYDOWN(KEY_RIGHT) THEN
-            IF Player.anim <> 1 THEN Set_Anim Player, 1
-        ELSE
-            IF Player.anim <> 0 THEN Set_Anim Player, 0
-        END IF
-
-        Draw_Obj Player
-        Anim_Update Player
-
-        Draw_Screen
-    LOOP UNTIL _KEYDOWN(27)
-END SUB
-
-SUB Set_Anim (Obj AS Object, anim)
-    Obj.anim = anim
-    Reset_Anim Obj
-END SUB
-
-SUB Reset_Anim (Obj AS Object)
-    Obj.frame = 0
-    Anims(Obj.anim).t_dur = 0
-END SUB
-
-SUB Draw_Screen
-    _PUTIMAGE (0, 0)-(640, 480), display&, display&, (0, 0)-(320, 240)
-    _DISPLAY
-    _LIMIT 60
-END SUB
-
-SUB Anim_Update (Obj AS Object)
-    Anims(Player.anim).t_dur = Anims(Player.anim).t_dur + 1
-
-    IF Anims(Player.anim).t_dur >= Anims(Player.anim).dur THEN
-        Anims(Player.anim).t_dur = 0
-
-        Player.frame = Player.frame + 1
-
-        IF Player.frame > Anims(Player.anim).num_frames THEN Player.frame = 0
+    IF _KEYDOWN(KEY_RIGHT) THEN
+        Set_Anim player, ANIM_RUN
+        player.h_flip = 1
+        player.h_speed = player.h_speed_max * player.h_flip
     END IF
+
+    IF _KEYDOWN(KEY_LEFT) THEN
+        Set_Anim player, ANIM_RUN
+        player.h_flip = -1
+        player.h_speed = player.h_speed_max * player.h_flip
+    END IF
+
+    IF NOT player_input THEN
+        Set_Anim player, ANIM_IDLE
+        player.h_speed = player.h_speed * player.friction
+    END IF
+
+    camera.x = camera.x + player.h_speed
 END SUB
 
+FUNCTION player_input
+    player_input = _KEYDOWN(KEY_RIGHT) OR _KEYDOWN(KEY_LEFT)
+END FUNCTION
+
+
+
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' OBJECTS
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
 SUB Draw_Obj (Obj AS Object)
-    frame = Anims(Obj.anim).index + Player.frame
+    frame = Anims(Obj.anim).index + Obj.frame
+    sprite& = Sprites(frame)
 
-    _PUTIMAGE (Obj.x, Obj.y), Sprites(frame)
+    w = _WIDTH(sprite&) * Obj.h_flip
+    h = _HEIGHT(sprite&)
+    x_off = Obj.x_off * w
+    y_off = Obj.y_off * h
+
+    _PUTIMAGE (Obj.x - x_off, Obj.y - y_off)-(Obj.x - x_off + w, Obj.y - y_off + h), sprite&
 END SUB
 
-SUB Init_Sprites
+
+
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' BACKGROUNDS
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
+SUB Init_BG
+    bg = _LOADIMAGE("assets\BGs\environment-preview.png")
+END SUB
+
+SUB Draw_BG
+    c_x1 = camera.x
+    c_y1 = camera.y
+    c_x2 = c_x1 + GAME_WIDTH
+    c_y2 = c_y1 + GAME_HEIGHT
+
+    _PUTIMAGE (0, 0)-(GAME_WIDTH, GAME_HEIGHT), bg, , (c_x1, c_y1)-(c_x2, c_y2)
+END SUB
+
+
+
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' ANIMATION
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
+SUB Init_Anims
     spr_index = 0: anim_index = 0
 
     Load_Anim 10, "adventurer-idle-2-0", 4
@@ -122,10 +162,50 @@ SUB Load_Sprites (filename$, num_frames)
 
     FOR i = 0 TO num_frames - 1
         REDIM _PRESERVE Sprites(0 TO spr_index) AS LONG
-        path$ = "assets\" + filename$ + LTRIM$(STR$(i)) + ".png"
+        path$ = "assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
         Sprites(UBOUND(Sprites)) = _LOADIMAGE(path$)
         spr_index = spr_index + 1
     NEXT i
+END SUB
+
+SUB Set_Anim (Obj AS Object, anim)
+    IF player.anim = anim THEN EXIT SUB
+
+    Obj.anim = anim
+    Obj.frame = 0
+    Anims(Obj.anim).t_dur = 0
+END SUB
+
+SUB Anim_Update (Obj AS Object)
+    Anims(Obj.anim).t_dur = Anims(Obj.anim).t_dur + 1
+
+    IF Anims(Obj.anim).t_dur >= Anims(Obj.anim).dur THEN
+        Anims(Obj.anim).t_dur = 0
+
+        Obj.frame = Obj.frame + 1
+        IF Obj.frame > Anims(Obj.anim).num_frames THEN Obj.frame = 0
+    END IF
+END SUB
+
+
+
+'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+' MISC
+'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
+SUB Init_Screen
+    SCREEN _NEWIMAGE(GAME_WIDTH * WINDOW_SCALE, GAME_HEIGHT * WINDOW_SCALE, 32)
+    _SCREENMOVE -1000, -200
+END SUB
+
+SUB Init_Camera
+    camera.x = 0
+    camera.y = _HEIGHT(bg) - GAME_HEIGHT - 1
+END SUB
+
+SUB Draw_Screen
+    _PUTIMAGE , , , (0, 0)-(GAME_WIDTH, GAME_HEIGHT)
+    _DISPLAY
+    _LIMIT 60
 END SUB
 
 SUB Cleanup_Sprites
