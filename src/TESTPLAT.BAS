@@ -9,6 +9,7 @@ TYPE Object
     friction AS SINGLE
     anim AS INTEGER
     frame AS INTEGER
+    is_attacking AS INTEGER
 END TYPE
 
 TYPE Anim
@@ -24,8 +25,8 @@ TYPE Camera
 END TYPE
 
 CONST true = -1, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
-CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_ESC = 27
-CONST ANIM_IDLE = 0, ANIM_RUN = 1
+CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
+CONST ANIM_IDLE = 0, ANIM_RUN = 1, ANIM_ATTACK = 2
 
 REDIM SHARED bg AS LONG, Sprites(0) AS LONG, Anims(0) AS Anim
 DIM SHARED player AS Object, camera AS Camera
@@ -62,39 +63,53 @@ SUB Init_Player
     player.x_off = 0.5
     player.y_off = 1
     player.h_flip = 1
-    player.h_speed = 0
     player.h_speed_max = 4
     player.friction = 0.9
-    player.anim = 0
-    player.frame = 0
 END SUB
 
 SUB Do_Input
+    Input_Move
+    Input_Attack
+    Camera_Update
+END SUB
 
+SUB Input_Move
     IF _KEYDOWN(KEY_RIGHT) THEN
-        Set_Anim player, ANIM_RUN
+        IF NOT player.is_attacking THEN Set_Anim player, ANIM_RUN
+
         player.h_flip = 1
         player.h_speed = player.h_speed_max * player.h_flip
     END IF
 
     IF _KEYDOWN(KEY_LEFT) THEN
-        Set_Anim player, ANIM_RUN
+        IF NOT player.is_attacking THEN Set_Anim player, ANIM_RUN
+
         player.h_flip = -1
         player.h_speed = player.h_speed_max * player.h_flip
     END IF
 
-    IF NOT player_input THEN
-        Set_Anim player, ANIM_IDLE
+    IF no_keydown THEN
+        IF NOT player.is_attacking THEN Set_Anim player, ANIM_IDLE
+
         player.h_speed = player.h_speed * player.friction
     END IF
-
-    camera.x = camera.x + player.h_speed
 END SUB
 
-FUNCTION player_input
-    player_input = _KEYDOWN(KEY_RIGHT) OR _KEYDOWN(KEY_LEFT)
+FUNCTION no_keydown
+    no_keydown = NOT _KEYDOWN(KEY_RIGHT) AND NOT _KEYDOWN(KEY_LEFT) AND NOT _KEYDOWN(KEY_SPACE)
 END FUNCTION
 
+SUB Input_Attack
+    IF _KEYDOWN(KEY_SPACE) THEN
+        Set_Anim player, ANIM_ATTACK
+        player.is_attacking = true
+        player.h_speed = (player.h_speed_max / 4) * player.h_flip
+    END IF
+
+    IF player.anim = ANIM_ATTACK AND player.frame >= Anims(player.anim).num_frames THEN
+        player.is_attacking = false
+    END IF
+END SUB
 
 
 'อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
@@ -140,6 +155,7 @@ SUB Init_Anims
 
     Load_Anim 10, "adventurer-idle-2-0", 4
     Load_Anim 5, "adventurer-run3-0", 6
+    Load_Anim 5, "adventurer-attack2-0", 6
 END SUB
 
 SUB Load_Anim (dur, filename$, num_frames)
@@ -169,7 +185,7 @@ SUB Load_Sprites (filename$, num_frames)
 END SUB
 
 SUB Set_Anim (Obj AS Object, anim)
-    IF player.anim = anim THEN EXIT SUB
+    IF Obj.anim = anim THEN EXIT SUB
 
     Obj.anim = anim
     Obj.frame = 0
@@ -194,7 +210,8 @@ END SUB
 'ฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤฤ
 SUB Init_Screen
     SCREEN _NEWIMAGE(GAME_WIDTH * WINDOW_SCALE, GAME_HEIGHT * WINDOW_SCALE, 32)
-    _SCREENMOVE -1000, -200
+    '    _SCREENMOVE -1000, -200
+    _PRINTMODE _KEEPBACKGROUND
 END SUB
 
 SUB Init_Camera
@@ -202,8 +219,20 @@ SUB Init_Camera
     camera.y = _HEIGHT(bg) - GAME_HEIGHT - 1
 END SUB
 
+SUB Camera_Update
+    camera.x = camera.x + player.h_speed
+END SUB
+
 SUB Draw_Screen
     _PUTIMAGE , , , (0, 0)-(GAME_WIDTH, GAME_HEIGHT)
+
+    LOCATE 1, 1
+    COLOR _RGB(255, 255, 0)
+    PRINT "GothicVania Town background by ansimuz (ansimuz.itch.io ansimuz.com @ansimuz)"
+    PRINT "Animated Pixel Adventurer sprites by rvros (rvros.itch.io)"
+    PRINT
+    PRINT "Left/Right to move, Space to attack"
+
     _DISPLAY
     _LIMIT 60
 END SUB
