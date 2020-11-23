@@ -183,7 +183,7 @@ SUB Draw_Obj (Obj AS Object)
     x_off = Obj.x_off * w 'use the middle-bottom offset point instead of top-left (0, 0)
     y_off = Obj.y_off * h
 
-    ' add those offsets and then ignore the camera so the camera can move separately
+    'add those offsets and then ignore the camera so the camera can move separately
     'ugly hack, camera/obj position systems should be redone as totally separate things
     x = Obj.x - x_off - camera.x
     y = Obj.y - y_off
