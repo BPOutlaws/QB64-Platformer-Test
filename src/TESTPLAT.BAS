@@ -221,11 +221,11 @@ SUB Init_Anims
     spr_index = 0: anim_index = 0
 
     'duration, sprite filename (minus the frame number at the end), number of frames
-    'throw frames in the /assets/ dir and you can add Anims with just one line
-    'but you'd want to define some CONST ANIM_NAME's up above for readability
     Load_Anim 10, "adventurer-idle-2-0", 4
     Load_Anim 5, "adventurer-run3-0", 6
     Load_Anim 5, "adventurer-attack2-0", 6
+    'throw frames in the /assets/ dir and you can add Anims with just one line
+    'but you'd want to define some CONST ANIM_NAME's up above for readability
 END SUB
 
 SUB Load_Anim (dur, filename$, num_frames)
