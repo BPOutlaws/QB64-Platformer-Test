@@ -7,6 +7,17 @@
 'Animated Pixel Adventurer sprites by rvros (rvros.itch.io)
 '   https://rvros.itch.io/animated-pixel-hero
 
+'[11/24/2020] NOTES:
+'- Added Objects array so player is now Objects(0). Can QB64 do something like
+'  "const player = Objects(0)" for readability?  Can't find a way...
+
+'- Anims & Sprites still need character specific arrays, it's sloppy having
+'  them as huge universal arrays lol no arrays inside TYPEs allowed but
+'  even an Anims(obj_index, anim_index) would be better
+
+'- Load_Anim could probably use _LOADIMAGE failing to automatically tell how
+'  many frames are in the anim...no more sequential filenames = anim loaded
+
 
 
 TYPE Object
@@ -37,7 +48,7 @@ TYPE Camera
     x_off AS SINGLE
 END TYPE
 
-CONST true = -1, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
+CONST true = -1, false = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 CONST ANIM_IDLE = 0, ANIM_RUN = 1, ANIM_ATTACK = 2
 
@@ -53,10 +64,10 @@ DIM SHARED bg AS LONG, camera AS Camera
 Init_Game
 Init_Screen
 Init_BG
-Init_Camera
 Init_Anims
 Init_Player
 Init_NPCs
+Init_Camera
 
 DO
     Draw_BG
@@ -78,7 +89,7 @@ Cleanup_Sprites
 '_____________________________________________________________________________
 SUB Init_Player
     obj_index = 0
-    Add_Object _WIDTH(bg) / 2, 208, 0.5, 1, 1, 4, 0.9
+    Add_Object _WIDTH(bg) / 4, 208, 0.5, 1, 1, 4, 0.9
 END SUB
 
 SUB Do_Input
@@ -128,6 +139,8 @@ END SUB
 SUB Player_Update
     Objects(0).x = Objects(0).x + Objects(0).h_speed
 END SUB
+
+
 
 '_____________________________________________________________________________
 '
@@ -281,13 +294,13 @@ END SUB
 
 SUB Init_Screen
     SCREEN _NEWIMAGE(GAME_WIDTH * WINDOW_SCALE, GAME_HEIGHT * WINDOW_SCALE, 32)
-    _SCREENMOVE -1000, -200
+    '    _SCREENMOVE -1000, -200
     _PRINTMODE _KEEPBACKGROUND
 END SUB
 
 SUB Init_Camera
     camera.x_off = 100
-    camera.x = (_WIDTH(bg) / 2) - (GAME_WIDTH / 2)
+    camera.x = Objects(0).x - (GAME_WIDTH / 2)
     camera.x = camera.x + camera.x_off
 
     camera.y = _HEIGHT(bg) - GAME_HEIGHT - 1
