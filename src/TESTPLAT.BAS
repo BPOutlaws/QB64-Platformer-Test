@@ -7,8 +7,7 @@
 'Animated Pixel Adventurer sprites by rvros (rvros.itch.io)
 '   https://rvros.itch.io/animated-pixel-hero
 
-'[11/24/2020] NOTES:
-'Removed comments for easier dev lol
+
 
 TYPE Object
     obj_index AS INTEGER
@@ -51,19 +50,21 @@ DIM SHARED bg AS LONG, camera AS Camera
 '
 ' GAMEPLAY
 '_____________________________________________________________________________
+Init_Game
 Init_Screen
 Init_BG
 Init_Camera
 Init_Anims
 Init_Player
+Init_NPCs
 
 DO
     Draw_BG
     Do_Input
     Player_Update
     Camera_Update
-    Draw_Obj Objects(0)
-    Anim_Update Objects(0)
+    Draw_Objs
+    Anim_Update_Objs
     Draw_Screen
 LOOP UNTIL _KEYDOWN(KEY_ESC)
 
@@ -132,6 +133,16 @@ END SUB
 '
 ' OBJECTS
 '_____________________________________________________________________________
+SUB Init_NPCs
+    'woman
+    FOR i = 0 TO 10
+        x = INT(RND * _WIDTH(bg))
+        h_flip = INT(RND * 2) * 2 - 1
+        Add_Object x, 208, 0.5, 1, h_flip, 2, 0.9
+        Objects(UBOUND(Objects)).anim = 3
+    NEXT i
+END SUB
+
 SUB Add_Object (x AS SINGLE, y AS SINGLE, x_off AS SINGLE, y_off AS SINGLE, h_flip AS INTEGER, h_speed_max AS SINGLE, friction AS SINGLE)
     SHARED obj_index
 
@@ -147,6 +158,12 @@ SUB Add_Object (x AS SINGLE, y AS SINGLE, x_off AS SINGLE, y_off AS SINGLE, h_fl
     Objects(obj_index).friction = friction
 
     obj_index = obj_index + 1
+END SUB
+
+SUB Draw_Objs
+    FOR i = UBOUND(Objects) TO 0 STEP -1
+        Draw_Obj Objects(i)
+    NEXT i
 END SUB
 
 SUB Draw_Obj (Obj AS Object)
@@ -191,9 +208,11 @@ END SUB
 SUB Init_Anims
     spr_index = 0: anim_index = 0
 
-    Load_Anim 10, "adventurer-idle-2-0", 4
-    Load_Anim 5, "adventurer-run3-0", 6
-    Load_Anim 5, "adventurer-attack2-0", 6
+    Load_Anim 10, "adventurer\adventurer-idle-2-0", 4
+    Load_Anim 5, "adventurer\adventurer-run3-0", 6
+    Load_Anim 5, "adventurer\adventurer-attack2-0", 6
+
+    Load_Anim 10, "woman\woman-idle-0", 6
 END SUB
 
 SUB Load_Anim (dur, filename$, num_frames)
@@ -220,6 +239,7 @@ SUB Load_Sprites (filename$, num_frames)
         REDIM _PRESERVE Sprites(0 TO spr_index) AS LONG
         path$ = "assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
         Sprites(spr_index) = _LOADIMAGE(path$)
+        IF Sprites(spr_index) >= -1 THEN COLOR _RGB(255, 0, 0): PRINT "ERROR loading: " + path$: SLEEP
         spr_index = spr_index + 1
     NEXT i
 END SUB
@@ -230,6 +250,12 @@ SUB Set_Anim (Obj AS Object, anim)
     Obj.anim = anim
     Obj.frame = 0
     Anims(Obj.anim).t_dur = 0
+END SUB
+
+SUB Anim_Update_Objs
+    FOR i = 0 TO UBOUND(Objects)
+        Anim_Update Objects(i)
+    NEXT i
 END SUB
 
 SUB Anim_Update (Obj AS Object)
@@ -249,6 +275,10 @@ END SUB
 '
 ' MISC
 '_____________________________________________________________________________
+SUB Init_Game
+    RANDOMIZE TIMER
+END SUB
+
 SUB Init_Screen
     SCREEN _NEWIMAGE(GAME_WIDTH * WINDOW_SCALE, GAME_HEIGHT * WINDOW_SCALE, 32)
     _SCREENMOVE -1000, -200
