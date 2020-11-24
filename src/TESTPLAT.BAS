@@ -11,6 +11,7 @@
 'Removed comments for easier dev lol
 
 TYPE Object
+    obj_index AS INTEGER
     x AS SINGLE
     y AS SINGLE
     x_off AS SINGLE
@@ -41,8 +42,8 @@ CONST true = -1, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 CONST ANIM_IDLE = 0, ANIM_RUN = 1, ANIM_ATTACK = 2
 
-REDIM SHARED bg AS LONG, Sprites(0) AS LONG, Anims(0) AS Anim
-DIM SHARED player AS Object, camera AS Camera
+REDIM SHARED Objects(0) AS Object, Sprites(0) AS LONG, Anims(0) AS Anim
+DIM SHARED bg AS LONG, camera AS Camera
 
 
 
@@ -61,8 +62,8 @@ DO
     Do_Input
     Player_Update
     Camera_Update
-    Draw_Obj player
-    Anim_Update player
+    Draw_Obj Objects(0)
+    Anim_Update Objects(0)
     Draw_Screen
 LOOP UNTIL _KEYDOWN(KEY_ESC)
 
@@ -75,13 +76,8 @@ Cleanup_Sprites
 ' PLAYER
 '_____________________________________________________________________________
 SUB Init_Player
-    player.x = _WIDTH(bg) / 2
-    player.y = 208
-    player.x_off = 0.5
-    player.y_off = 1
-    player.h_flip = 1
-    player.h_speed_max = 4
-    player.friction = 0.9
+    obj_index = 0
+    Add_Object _WIDTH(bg) / 2, 208, 0.5, 1, 1, 4, 0.9
 END SUB
 
 SUB Do_Input
@@ -91,23 +87,23 @@ END SUB
 
 SUB Input_Move
     IF _KEYDOWN(KEY_RIGHT) THEN
-        IF NOT player.is_attacking THEN Set_Anim player, ANIM_RUN
+        IF NOT Objects(0).is_attacking THEN Set_Anim Objects(0), ANIM_RUN
 
-        player.h_flip = 1
-        player.h_speed = player.h_speed_max * player.h_flip
+        Objects(0).h_flip = 1
+        Objects(0).h_speed = Objects(0).h_speed_max * Objects(0).h_flip
     END IF
 
     IF _KEYDOWN(KEY_LEFT) THEN
-        IF NOT player.is_attacking THEN Set_Anim player, ANIM_RUN
+        IF NOT Objects(0).is_attacking THEN Set_Anim Objects(0), ANIM_RUN
 
-        player.h_flip = -1
-        player.h_speed = player.h_speed_max * player.h_flip
+        Objects(0).h_flip = -1
+        Objects(0).h_speed = Objects(0).h_speed_max * Objects(0).h_flip
     END IF
 
     IF no_keydown THEN
-        IF NOT player.is_attacking THEN Set_Anim player, ANIM_IDLE
+        IF NOT Objects(0).is_attacking THEN Set_Anim Objects(0), ANIM_IDLE
 
-        player.h_speed = player.h_speed * player.friction
+        Objects(0).h_speed = Objects(0).h_speed * Objects(0).friction
     END IF
 END SUB
 
@@ -117,25 +113,42 @@ END FUNCTION
 
 SUB Input_Attack
     IF _KEYDOWN(KEY_SPACE) THEN
-        Set_Anim player, ANIM_ATTACK
+        Set_Anim Objects(0), ANIM_ATTACK
 
-        player.is_attacking = true
-        player.h_speed = (player.h_speed_max / 4) * player.h_flip
+        Objects(0).is_attacking = true
+        Objects(0).h_speed = (Objects(0).h_speed_max / 4) * Objects(0).h_flip
     END IF
 
-    IF player.anim = ANIM_ATTACK AND player.frame >= Anims(player.anim).num_frames THEN
-        player.is_attacking = false
+    IF Objects(0).anim = ANIM_ATTACK AND Objects(0).frame >= Anims(Objects(0).anim).num_frames THEN
+        Objects(0).is_attacking = false
     END IF
 END SUB
 
 SUB Player_Update
-    player.x = player.x + player.h_speed
+    Objects(0).x = Objects(0).x + Objects(0).h_speed
 END SUB
 
 '_____________________________________________________________________________
 '
 ' OBJECTS
 '_____________________________________________________________________________
+SUB Add_Object (x AS SINGLE, y AS SINGLE, x_off AS SINGLE, y_off AS SINGLE, h_flip AS INTEGER, h_speed_max AS SINGLE, friction AS SINGLE)
+    SHARED obj_index
+
+    REDIM _PRESERVE Objects(obj_index) AS Object
+
+    Objects(obj_index).obj_index = obj_index
+    Objects(obj_index).x = x
+    Objects(obj_index).y = y
+    Objects(obj_index).x_off = x_off
+    Objects(obj_index).y_off = y_off
+    Objects(obj_index).h_flip = h_flip
+    Objects(obj_index).h_speed_max = h_speed_max
+    Objects(obj_index).friction = friction
+
+    obj_index = obj_index + 1
+END SUB
+
 SUB Draw_Obj (Obj AS Object)
     frame = Anims(Obj.anim).spr_index + Obj.frame
     sprite& = Sprites(frame)
@@ -206,7 +219,7 @@ SUB Load_Sprites (filename$, num_frames)
     FOR i = 0 TO num_frames
         REDIM _PRESERVE Sprites(0 TO spr_index) AS LONG
         path$ = "assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
-        Sprites(UBOUND(Sprites)) = _LOADIMAGE(path$)
+        Sprites(spr_index) = _LOADIMAGE(path$)
         spr_index = spr_index + 1
     NEXT i
 END SUB
@@ -252,8 +265,8 @@ END SUB
 
 SUB Camera_Update
     view_center = GAME_WIDTH / 2
-    x_off = view_center - (camera.x_off * player.h_flip)
-    target_x = player.x - x_off
+    x_off = view_center - (camera.x_off * Objects(0).h_flip)
+    target_x = Objects(0).x - x_off
     easing = 0.05
 
     camera.x = camera.x + ((target_x - camera.x) * easing)
