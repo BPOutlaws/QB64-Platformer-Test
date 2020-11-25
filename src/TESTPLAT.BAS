@@ -26,6 +26,16 @@
 'UBOUND should handle obj_index anim_index spr_index really
 
 
+'***********************************
+'***********************************
+
+'ok try doing some SUBs to validate EVERYTHING after both characters
+'are loaded...NPC REDIMing is fucking up the player's Sprites and/or Anims
+
+'***********************************
+'***********************************
+
+
 TYPE Object
     obj_index AS INTEGER
     x AS SINGLE
@@ -54,7 +64,7 @@ TYPE Camera
     x_off AS SINGLE
 END TYPE
 
-CONST true = -1, false = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
+CONST true = -1, false = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 CONST ANIM_IDLE = 0, ANIM_RUN = 1, ANIM_ATTACK = 2
 
@@ -77,7 +87,7 @@ Init_BG
 'Init_Anims
 Init_Player
 'END
-'Init_NPCs
+Init_NPCs
 Init_Camera
 
 DO
@@ -162,7 +172,7 @@ SUB Init_Player
     spr_index = 0
     anim_index = 0
 
-    Load_Anim 0, 10, "adventurer\adventurer-idle-2-0", 4
+    Load_Anim 0, 10, "adventurer\adventurer-idle-2-0", 3
 
     Debug "Init Player 1", 999
     Debug "ubound1", UBOUND(Anims, 1)
@@ -170,8 +180,8 @@ SUB Init_Player
 
 
 
-    Load_Anim 0, 5, "adventurer\adventurer-run3-0", 6
-    Load_Anim 0, 5, "adventurer\adventurer-attack2-0", 6
+    Load_Anim 0, 5, "adventurer\adventurer-run3-0", 5
+    Load_Anim 0, 5, "adventurer\adventurer-attack2-0", 5
 
     Debug "Init_Player done", 999
     Debug "ubound1", UBOUND(Anims, 1)
@@ -199,9 +209,9 @@ SUB Init_NPCs
     '    anim_index = 0
 
     spr_index = 0
-    anim_index = 0
+    anim_index = 0 'I bet this is why...it's dimming both to the 0 mark again
 
-    Load_Anim 1, 10, "woman\woman-idle-0", 6
+    Load_Anim 1, 10, "woman\woman-idle-0", 5
 
     x = INT(RND * _WIDTH(bg))
     h_flip = INT(RND * 2) * 2 - 1
@@ -240,12 +250,47 @@ SUB Add_Object (obj_index AS INTEGER, x AS SINGLE, y AS SINGLE, x_off AS SINGLE,
 END SUB
 
 SUB Draw_Objs
-    FOR i = UBOUND(Objects) TO 0 STEP -1
-        Draw_Obj Objects(i)
-    NEXT i
+    'FOR i = UBOUND(Objects) TO 0 STEP -1
+    '    Draw_Obj Objects(i)
+    'NEXT i
+
+    Draw_Obj Objects(0)
 END SUB
 
 SUB Draw_Obj (Obj AS Object)
+
+
+    FOR i = 0 TO UBOUND(Sprites, 2)
+        CLS
+        LOCATE 1, 1
+        COLOR _RGB(0, 255, 0)
+        PRINT "ubound 2", UBOUND(Sprites, 2)
+        LOCATE 2, 1
+        PRINT "frame", i
+        sprite& = Sprites(Obj.obj_index, i)
+        PRINT "exists?", sprite&
+
+        w = _WIDTH(sprite&)
+        h = _HEIGHT(sprite&)
+        '        x_off = Obj.x_off * w
+        '        y_off = Obj.y_off * h
+        x = 50
+        y = 50
+
+        _PUTIMAGE (x, y)-(x + w, y + h), sprite&
+        _DISPLAY
+        SLEEP
+    NEXT i
+
+    CLS
+    LOCATE 1, 1
+    PLAY "D"
+    PRINT "DONE"
+    SLEEP
+
+END SUB
+
+SUB Draw_Obj0 (Obj AS Object)
     '    frame = Anims(Obj.obj_index, Obj.anim).spr_index + Obj.frame
     '    sprite& = Sprites(frame)
 
@@ -264,6 +309,10 @@ SUB Draw_Obj (Obj AS Object)
 
     '    frame = Anims(Obj.obj_index, Obj.anim).spr_index + Obj.frame
     frame = Anims(Obj.obj_index, Obj.anim).spr_index + Obj.frame
+    CLS
+    PRINT "ub1, ub1, frame " + STR$(UBOUND(Sprites, 1)) + " " + STR$(UBOUND(Sprites, 2)) + " " + STR$(frame) + STR$(Anims(Obj.obj_index, Obj.anim).t_dur)
+    '    _DISPLAY: SLEEP
+
     sprite& = Sprites(Obj.obj_index, frame)
 
 
@@ -318,13 +367,40 @@ END SUB
 SUB Load_Anim (obj_index, dur, filename$, num_frames)
     SHARED spr_index, anim_index
 
-    num_frames = num_frames - 1
+    '    num_frames = num_frames
     Debug "anim_index", anim_index
-    REDIM _PRESERVE Anims(obj_index, anim_index) AS Anim
+    '    REDIM _PRESERVE Anims(obj_index, anim_index) AS Anim
+    '    PRINT anim_index, UBOUND(Anims, 2), obj_index
+    '    _DISPLAY: SLEEP
 
-    Debug "Load_Anim", 999
-    Debug "ubound1", UBOUND(Anims, 1)
-    Debug "ubound2", UBOUND(Anims, 2)
+    '    IF anim_index >= UBOUND(Anims, 2) THEN
+    '    IF UBOUND(Anims, 2) > anim_index THEN
+    '        anim_index = UBOUND(Anims, 2)
+    '    END IF
+
+    '    REDIM _PRESERVE Anims(obj_index, anim_index) AS Anim
+
+
+
+    new_size = UBOUND(Anims, 2)
+    IF anim_index + 1 > new_size THEN
+        new_size = anim_index + 1
+    END IF
+
+    REDIM _PRESERVE Anims(obj_index, new_size) AS Anim
+
+
+
+    ''''    REDIM _PRESERVE Anims(obj_index, UBOUND(Anims, 2) + 1) AS Anim
+
+    '   END IF
+
+    '    PRINT "ubound1", UBOUND(Anims, 1), "ubound2", UBOUND(Anims, 2)
+    '   _DISPLAY: SLEEP
+
+    '  Debug "Load_Anim", 999
+    '  Debug "ubound1", UBOUND(Anims, 1)
+    '  Debug "ubound2", UBOUND(Anims, 2)
 
 
     '    Debug "ubound 1", UBOUND(Anims, 1)
@@ -341,6 +417,8 @@ SUB Load_Anim (obj_index, dur, filename$, num_frames)
     '    Debug "_dur", Anims(obj_index, 1).t_dur
     '   Debug "_dur", Anims(0, 1).t_dur
 
+    '    COLOR _RGB(0, 255, 0): PRINT "ANIM IS " + STR$(obj_index) + ", " + STR$(anim_index): _DISPLAY: SLEEP
+
     'CLS
     'PRINT "just made Anim", obj_index, anim_index
     '_DISPLAY
@@ -350,6 +428,7 @@ SUB Load_Anim (obj_index, dur, filename$, num_frames)
     '    COLOR _RGB(0, 255, 0): PRINT " ANIM: " + STR$(anim_index) + " INDEX: " + STR$(Anims(obj_index, anim_index).spr_index): SLEEP
 
     anim_index = anim_index + 1
+    '    anim_index = UBOUND(Anims, 1)
 
     '    Load_Sprites obj_index, filename$, num_frames
     'END SUB
@@ -357,12 +436,51 @@ SUB Load_Anim (obj_index, dur, filename$, num_frames)
     'SUB Load_Sprites (obj_index, filename$, num_frames)
     '    SHARED spr_index
 
+    CLS
+    PRINT "before ub2", UBOUND(Sprites, 2)
+    '    PRINT "should become ub2", UBOUND(Sprites, 2) + num_frames
+    '   _DISPLAY
+    '  SLEEP
+
+    '    REDIM _PRESERVE Sprites(obj_index, UBOUND(Sprites, 2) + num_frames) AS LONG
+
+    new_size = UBOUND(Sprites, 2)
+    IF spr_index + num_frames > new_size THEN
+        new_size = spr_index + num_frames
+    END IF
+
+    '    REDIM _PRESERVE Sprites(obj_index, spr_index + num_frames) AS LONG
+
+    REDIM _PRESERVE Sprites(obj_index, new_size) AS LONG
+
+    ' CLS
+    PRINT "after ub2", UBOUND(Sprites, 2)
+    _DISPLAY
+    '    SLEEP
+
+    'spr_index = 0
+
     FOR i = 0 TO num_frames
-        REDIM _PRESERVE Sprites(obj_index, spr_index) AS LONG
+
+        '        REDIM _PRESERVE Sprites(obj_index, spr_index) AS LONG
+
+        '        IF UBOUND(Sprites, 2) > spr_index THEN
+        '            spr_index = UBOUND(Sprites, 2)
+        '        END IF
+
+        '        REDIM _PRESERVE Sprites(obj_index, spr_index) AS LONG
+
+
+
+        '        REDIM _PRESERVE Sprites(obj_index, UBOUND(Sprites, 2) + 1) AS LONG
+        PRINT "trying to do spr_index", spr_index
+
         path$ = "assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
         Sprites(obj_index, spr_index) = _LOADIMAGE(path$)
         IF Sprites(obj_index, spr_index) >= -1 THEN COLOR _RGB(255, 0, 0): PRINT "ERROR loading: " + path$: SLEEP
-        '        COLOR _RGB(0, 255, 0): PRINT path$ + " GOING IN " + STR$(obj_index) + ", " + STR$(spr_index): SLEEP
+
+        'COLOR _RGB(0, 255, 0): PRINT path$ + " GOING IN " + STR$(obj_index) + ", " + STR$(spr_index): _DISPLAY: SLEEP
+
         spr_index = spr_index + 1
     NEXT i
 END SUB
@@ -425,8 +543,8 @@ END SUB
 
 SUB Anim_Update (Obj AS Object)
 
-    LOCATE 1, 1
-    PRINT "ubounds", UBOUND(Sprites, 1), UBOUND(Sprites, 2), Anims(Obj.obj_index, Obj.anim).t_dur, Obj.frame
+    '   LOCATE 1, 1
+    '    PRINT "ubounds", UBOUND(Sprites, 1), UBOUND(Sprites, 2), Anims(Obj.obj_index, Obj.anim).t_dur, Obj.frame
     '    _DISPLAY: SLEEP
 
     Anims(Obj.obj_index, Obj.anim).t_dur = Anims(Obj.obj_index, Obj.anim).t_dur + 1
@@ -464,6 +582,7 @@ SUB Init_Camera
 END SUB
 
 SUB Camera_Update
+    EXIT SUB
     view_center = GAME_WIDTH / 2
     x_off = view_center - (camera.x_off * Objects(0).h_flip)
     target_x = Objects(0).x - x_off
@@ -473,7 +592,7 @@ SUB Camera_Update
 END SUB
 
 SUB Draw_Screen
-    _PUTIMAGE , , , (0, 0)-(GAME_WIDTH, GAME_HEIGHT)
+    '_PUTIMAGE , , , (0, 0)-(GAME_WIDTH, GAME_HEIGHT)
 
     'LOCATE 1, 1
     'COLOR _RGB(255, 255, 0)
