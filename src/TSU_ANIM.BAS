@@ -15,6 +15,7 @@ TYPE Object
     sprite AS INTEGER
     t_anim AS SINGLE
 
+    anim_idle AS INTEGER
     anim_run AS INTEGER
 END TYPE
 
@@ -40,17 +41,35 @@ REDIM SHARED Objects(0) AS Object, Anims(0) AS Anim, Sprites(0) AS Sprite
 Init_Screen
 
 Add_Object 0, 0
+Objects(1).anim_idle = Add_Anim(20, "assets\sprites\adventurer\adventurer-idle-2-0")
 Objects(1).anim_run = Add_Anim(5, "assets\sprites\adventurer\adventurer-run3-0")
-Play_Anim 1, Objects(1).anim_run
+Play_Anim 1, Objects(1).anim_idle
 
 DO
     CLS
+    Do_Input
     Update_Objects
     Draw_Objects
     Draw_Screen
 LOOP UNTIL _KEYDOWN(KEY_ESC)
 
 Cleanup_Sprites
+
+
+
+'_____________________________________________________________________________
+'
+' PLAYER
+'_____________________________________________________________________________
+SUB Do_Input
+    IF _KEYDOWN(KEY_RIGHT) THEN
+        Play_Anim 1, Objects(1).anim_run
+    END IF
+
+    IF _KEYDOWN(KEY_LEFT) THEN
+        Play_Anim 1, Objects(1).anim_idle
+    END IF
+END SUB
 
 
 
@@ -85,17 +104,17 @@ END SUB
 ' ANIMATIONS
 '_____________________________________________________________________________
 FUNCTION Add_Anim (speed, path$)
-    DIM i, sprite&: i = UBOUND(Sprites)
-
     REDIM _PRESERVE Anims(UBOUND(Anims) + 1) AS Anim
     Add_Anim = UBOUND(Anims)
-    Anims(Add_Anim).sprite_index = i
+    Anims(Add_Anim).sprite_index = UBOUND(Sprites) + 1
+
+    DIM i, sprite&: i = 0
 
     DO: sprite& = add_sprite&(path$, i)
         i = i + 1
     LOOP WHILE sprite& < -1
 
-    Anims(Add_Anim).num_frames = i - Anims(Add_Anim).sprite_index - 1
+    Anims(Add_Anim).num_frames = i - 1
     Anims(Add_Anim).speed = speed
 END FUNCTION
 
@@ -106,10 +125,14 @@ SUB Update_Anim (i)
         Objects(i).t_anim = Anims(Objects(i).anim).speed
         Objects(i).sprite = Objects(i).sprite + 1
 
-        IF Objects(i).sprite > Anims(Objects(i).anim).num_frames THEN
-            Objects(i).sprite = 1
+        IF Objects(i).sprite >= Anims(Objects(i).anim).sprite_index + Anims(Objects(i).anim).num_frames THEN
+            Objects(i).sprite = Anims(Objects(i).anim).sprite_index
         END IF
     END IF
+
+    LOCATE 1, 1
+    PRINT Objects(i).sprite
+
 END SUB
 
 SUB Play_Anim (i, anim)
@@ -130,6 +153,10 @@ FUNCTION add_sprite& (path$, i)
     IF add_sprite& < -1 THEN
         REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
         Sprites(UBOUND(Sprites)).sprite = add_sprite&
+
+        PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites))
+        SLEEP
+
     END IF
 END FUNCTION
 
