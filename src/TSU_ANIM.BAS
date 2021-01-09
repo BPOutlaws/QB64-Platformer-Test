@@ -10,6 +10,28 @@
 
 OPTION _EXPLICIT
 
+TYPE Object
+    x AS SINGLE
+    y AS SINGLE
+
+    anim AS INTEGER
+    sprite AS INTEGER
+    t_anim AS SINGLE
+
+    anim_idle AS INTEGER
+    anim_run AS INTEGER
+END TYPE
+
+TYPE Anim
+    sprite_index AS INTEGER
+    num_frames AS INTEGER
+    speed AS SINGLE
+END TYPE
+
+TYPE Sprite
+    sprite AS LONG
+END TYPE
+
 CONST TRUE = -1, FALSE = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 
@@ -19,7 +41,6 @@ REDIM SHARED Objects(0) AS Object, Anims(0) AS Anim, Sprites(0) AS Sprite
 '
 ' GAME
 '_____________________________________________________________________________
-Init_Types
 Init_Screen
 
 Add_Object 0, 0
@@ -67,7 +88,7 @@ END SUB
 
 SUB Update_Objects
     DIM i: FOR i = 1 TO UBOUND(Objects)
-        Update_Anim i
+        Update_Anim Objects(i)
     NEXT i
 END SUB
 
@@ -98,20 +119,20 @@ FUNCTION Add_Anim (speed, path$)
     Anims(Add_Anim).speed = speed
 END FUNCTION
 
-SUB Update_Anim (i)
-    IF Objects(i).t_anim > 0 THEN
-        Objects(i).t_anim = Objects(i).t_anim - 1
+SUB Update_Anim (Obj AS Object)
+    IF Obj.t_anim > 0 THEN
+        Obj.t_anim = Obj.t_anim - 1
     ELSE
-        Objects(i).t_anim = Anims(Objects(i).anim).speed
-        Objects(i).sprite = Objects(i).sprite + 1
+        Obj.t_anim = Anims(Obj.anim).speed
+        Obj.sprite = Obj.sprite + 1
 
-        IF Objects(i).sprite >= Anims(Objects(i).anim).sprite_index + Anims(Objects(i).anim).num_frames THEN
-            Objects(i).sprite = Anims(Objects(i).anim).sprite_index
+        IF Obj.sprite >= Anims(Obj.anim).sprite_index + Anims(Obj.anim).num_frames THEN
+            Obj.sprite = Anims(Obj.anim).sprite_index
         END IF
     END IF
 
     LOCATE 1, 1
-    PRINT Objects(i).sprite
+    PRINT Obj.sprite
 
 END SUB
 
@@ -120,6 +141,29 @@ SUB Play_Anim (i, anim)
     Objects(i).t_anim = Anims(Objects(i).anim).speed
     Objects(i).sprite = Anims(Objects(i).anim).sprite_index
 END SUB
+
+'SUB Update_Anim (i)
+'    IF Objects(i).t_anim > 0 THEN
+'        Objects(i).t_anim = Objects(i).t_anim - 1
+'    ELSE
+'        Objects(i).t_anim = Anims(Objects(i).anim).speed
+'        Objects(i).sprite = Objects(i).sprite + 1
+
+'        IF Objects(i).sprite >= Anims(Objects(i).anim).sprite_index + Anims(Objects(i).anim).num_frames THEN
+'            Objects(i).sprite = Anims(Objects(i).anim).sprite_index
+'        END IF
+'    END IF
+
+'    LOCATE 1, 1
+'    PRINT Objects(i).sprite
+
+'END SUB
+
+'SUB Play_Anim (i, anim)
+'    Objects(i).anim = anim
+'    Objects(i).t_anim = Anims(Objects(i).anim).speed
+'    Objects(i).sprite = Anims(Objects(i).anim).sprite_index
+'END SUB
 
 
 
@@ -177,30 +221,6 @@ END SUB
 FUNCTION char$ (num)
     char$ = LTRIM$(STR$(num))
 END FUNCTION
-
-SUB Init_Types
-    TYPE Object
-        x AS SINGLE
-        y AS SINGLE
-
-        anim AS INTEGER
-        sprite AS INTEGER
-        t_anim AS SINGLE
-
-        anim_idle AS INTEGER
-        anim_run AS INTEGER
-    END TYPE
-
-    TYPE Anim
-        sprite_index AS INTEGER
-        num_frames AS INTEGER
-        speed AS SINGLE
-    END TYPE
-
-    TYPE Sprite
-        sprite AS LONG
-    END TYPE
-END SUB
 
 
 
