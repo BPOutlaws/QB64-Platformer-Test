@@ -98,13 +98,15 @@ END SUB
 ' SPRITES
 '_____________________________________________________________________________
 FUNCTION add_sprite& (path$, i)
-    add_sprite& = _LOADIMAGE(path$ + char$(i) + ".png")
+	dim i$
+	i$ = LTRIM$(STR$(i))
+    add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
 
     IF add_sprite& < -1 THEN
         REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
         Sprites(UBOUND(Sprites)).spr = add_sprite&
 
-        IF DEBUG = TRUE THEN PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites))
+        IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + LTRIM$(STR$(UBOUND(Sprites)))
     END IF
 END FUNCTION
 
@@ -115,33 +117,3 @@ SUB Clear_Sprites
 
     REDIM Sprites(0) AS Sprite
 END SUB
-
-
-
-'_____________________________________________________________________________
-'
-' SCREEN
-'_____________________________________________________________________________
-SUB Init_Screen
-    SCREEN _NEWIMAGE(GAME_WIDTH * WINDOW_SCALE, GAME_HEIGHT * WINDOW_SCALE, 32)
-    _SCREENMOVE -900, -100
-    _PRINTMODE _KEEPBACKGROUND
-END SUB
-
-SUB Draw_Screen
-    _PUTIMAGE , , , (0, 0)-(GAME_WIDTH, GAME_HEIGHT)
-    _DISPLAY
-    _LIMIT 60
-END SUB
-
-
-
-'_____________________________________________________________________________
-'
-' MISC
-'_____________________________________________________________________________
-FUNCTION char$ (num)
-    char$ = LTRIM$(STR$(num))
-END FUNCTION
-
-
