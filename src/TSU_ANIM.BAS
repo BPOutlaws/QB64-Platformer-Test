@@ -16,9 +16,6 @@ TYPE Object
 END TYPE
 
 TYPE Anim_obj
-    '    x AS SINGLE
-    '   y AS SINGLE
-
     obj_index AS SINGLE
 
     anim AS INTEGER
@@ -39,14 +36,13 @@ TYPE Sprite
     sprite AS LONG
 END TYPE
 
-CONST TRUE = -1, FALSE = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
+CONST TRUE = -1, FALSE = 0, DEBUG = FALSE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 
 REDIM SHARED Anim_objs(0) AS Anim_obj, Anims(0) AS Anim, Sprites(0) AS Sprite
 REDIM SHARED Objects(0) AS Object
 
-COMMON SHARED OBJS AS Object
-OBJS = Objects()
+CONST PATH_SPRITES$ = "assets\sprites\", PATH_PLAYER$ = PATH_SPRITES + "adventurer\adventurer-"
 
 
 
@@ -57,10 +53,22 @@ OBJS = Objects()
 Init_Screen
 
 Add_Anim_obj 0, 0, 1
-Anim_objs(1).anim_idle = Add_Anim(10, "assets\sprites\adventurer\adventurer-idle-2-0")
-Anim_objs(1).anim_run = Add_Anim(5, "assets\sprites\adventurer\adventurer-run3-0")
-Play_Anim Anim_objs(1), Anim_objs(1).anim_idle
+'AO(1).anim_idle = Add_Anim(10, PATH_PLAYER + "idle-2-0")
+'AO(1).anim_run = Add_Anim(5, PATH_PLAYER + "run3-0")
 
+'REDIM _PRESERVE Objs(1) AS Obj
+'Objs(1).x = 200
+'Objs(1).y = 50
+
+
+
+
+
+
+
+Add_Anim_obj 0, 0, 1
+Anim_objs(1).anim_idle = Add_Anim(10, PATH_PLAYER + "idle-2-0")
+Anim_objs(1).anim_run = Add_Anim(5, PATH_PLAYER + "run3-0")
 
 REDIM _PRESERVE Objects(1) AS Object
 Objects(1).x = 200
@@ -74,7 +82,9 @@ DO
     Draw_Screen
 LOOP UNTIL _KEYDOWN(KEY_ESC)
 
-Cleanup_Sprites
+Clear_Sprites
+
+
 
 '_____________________________________________________________________________
 '
@@ -97,42 +107,32 @@ END SUB
 ' OBJECTS
 '_____________________________________________________________________________
 SUB Add_Anim_obj (x, y, obj_index)
-    DIM AO AS Anim_obj
-    AO = Anim_objs()'HERE - put this into this thing lol
-
     REDIM _PRESERVE Anim_objs(UBOUND(Anim_Objs) + 1) AS Anim_obj
     DIM i: i = UBOUND(Anim_Objs)
 
     Anim_objs(i).obj_index = obj_index
-
-    '    Anim_Objs(i).x = Objects(obj_index).x 'x
-    '   Anim_Objs(i).y = Objects(obj_index).y 'y
-
-    '    Anim_Objs(i).obj_index = obj_index
 END SUB
 
 SUB Update_Anim_objs
     DIM i: FOR i = 1 TO UBOUND(Anim_objs)
-        'Update_Anim_Obj Anim_objs(i)
         Update_Anim Anim_objs(i)
     NEXT i
 END SUB
 
-'SUB Update_Anim_Obj (AO AS Anim_obj)
-'    AO.x = Objects(AO.obj_index).x
-'    AO.y = Objects(AO.obj_index).y
-'END SUB
-
 SUB Draw_Anim_objs
-    DIM AO, Spr AS Sprite
+    DIM AO, sprite&, x, y
     DIM i: FOR i = 1 TO UBOUND(Anim_objs)
-        '        Draw_Sprite Sprites(Anim_objs(i).sprite).sprite, Objects(Anim_objs(i).obj_index).x, Objects(Anim_objs(i).obj_index).y
-        '        Draw_Sprite Sprites(AO.sprite).sprite, Objects(AO.obj_index).x, Objects(AO.obj_index).y
         AO = Anim_objs(i).obj_index
-        Spr = Sprites(Anim_objs(i).sprite)
+        x = Objects(AO).x
+        y = Objects(AO).y
+        sprite& = Sprites(Anim_objs(i).sprite).sprite
 
-        Draw_Sprite Spr.sprite, Objects(AO).x, Objects(AO).y
+        _PUTIMAGE (x, y)-(x + _WIDTH(sprite&), y + _HEIGHT(sprite&)), sprite&
     NEXT i
+END SUB
+
+SUB Clear_Anim_objs
+    REDIM Anim_objs(0) AS Anim_obj
 END SUB
 
 
@@ -174,9 +174,7 @@ SUB Update_Anim (AO AS Anim_obj)
         END IF
     END IF
 
-    LOCATE 1, 1
-    PRINT AO.sprite
-
+    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT AO.sprite
 END SUB
 
 SUB Play_Anim (AO AS Anim_obj, i)
@@ -185,6 +183,10 @@ SUB Play_Anim (AO AS Anim_obj, i)
     AO.anim = i
     AO.t_anim = Anim.speed
     AO.sprite = Anim.sprite_index
+END SUB
+
+SUB Clear_Anims
+    REDIM Anims(0) AS Anim
 END SUB
 
 
@@ -200,22 +202,16 @@ FUNCTION add_sprite& (path$, i)
         REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
         Sprites(UBOUND(Sprites)).sprite = add_sprite&
 
-        PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites))
-        SLEEP
-
+        IF DEBUG = TRUE THEN PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites)): SLEEP
     END IF
 END FUNCTION
 
-SUB Draw_Sprite (sprite&, x, y) 'Draw_Anim_Obj
-    '    _PUTIMAGE (100, 100)-(100 + _WIDTH(sprite&), 100 + _HEIGHT(sprite&)), sprite&
-
-    _PUTIMAGE (x, y)-(x + _WIDTH(sprite&), y + _HEIGHT(sprite&)), sprite&
-END SUB
-
-SUB Cleanup_Sprites
+SUB Clear_Sprites
     DIM i: FOR i = 1 TO UBOUND(Sprites)
         IF Sprites(i).sprite < -1 THEN _FREEIMAGE Sprites(i).sprite
     NEXT i
+
+    REDIM Sprites(0) AS Sprite
 END SUB
 
 
