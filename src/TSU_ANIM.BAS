@@ -7,6 +7,8 @@ OPTION _EXPLICIT
 TYPE Obj
     x AS SINGLE
     y AS SINGLE
+    x_speed AS SINGLE
+    y_speed AS SINGLE
 END TYPE
 
 CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
@@ -24,25 +26,21 @@ REDIM SHARED Objs(0) AS Obj
 ' GAME
 '_____________________________________________________________________________
 Init_Screen
+Init_Player
 
-Add_Anim_obj
-Aobjs(PLAYER).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
-Aobjs(PLAYER).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
-
-REDIM _PRESERVE Objs(1) AS Obj
-Objs(PLAYER).x = 200
-Objs(PLAYER).y = 50
-Start_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
+Clear_objs
+Init_Player
 
 DO
     CLS
     Do_Input
-    Update_Anim_objs
-    Draw_Anim_objs
+    Update_objs
+    Update_Aobjs
+    Draw_Aobjs
     Draw_Screen
 LOOP UNTIL _KEYDOWN(ESC)
 
-Clear_Sprites
+Clear_objs
 
 
 
@@ -50,6 +48,15 @@ Clear_Sprites
 '
 ' PLAYER
 '_____________________________________________________________________________
+SUB Init_Player
+    DIM i: i = Add_Aobj
+
+    Aobjs(i).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
+    Aobjs(i).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
+
+    New_Obj Objs(), 200, 50, Aobjs(i).a_IDLE
+END SUB
+
 SUB Do_Input
     IF _KEYDOWN(RIGHT) THEN
         Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_RUN
@@ -58,6 +65,31 @@ SUB Do_Input
     IF _KEYDOWN(LEFT) THEN
         Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
     END IF
+END SUB
+
+
+
+'_____________________________________________________________________________
+'
+' OBJECTS
+'_____________________________________________________________________________
+SUB New_Obj (Objs() AS Obj, x, y, anim)
+    REDIM _PRESERVE Objs(UBOUND(Objs) + 1) AS Obj
+    DIM i: i = UBOUND(Objs)
+
+    Objs(i).x = x
+    Objs(i).y = y
+
+    Start_Anim Aobjs(i), anim
+END SUB
+
+SUB Update_objs
+
+END SUB
+
+SUB Clear_objs
+    Clear_Aobjs
+    REDIM Objs(0) AS Obj
 END SUB
 
 

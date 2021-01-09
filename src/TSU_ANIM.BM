@@ -1,20 +1,21 @@
 '_____________________________________________________________________________
 '
-' OBJECTS
+' ANIMATION OBJECTS
 '_____________________________________________________________________________
-SUB Add_Anim_obj
+FUNCTION Add_Aobj
     REDIM _PRESERVE Aobjs(UBOUND(AObjs) + 1) AS Aobj
-    DIM i: i = UBOUND(AObjs)
-    Aobjs(i).obj = i
-END SUB
 
-SUB Update_Anim_objs
+    Add_Aobj = UBOUND(AObjs)
+    Aobjs(Add_Aobj).obj = Add_Aobj
+END FUNCTION
+
+SUB Update_Aobjs
     DIM i: FOR i = 1 TO UBOUND(AObjs)
         Update_Anim Aobjs(i)
     NEXT i
 END SUB
 
-SUB Draw_Anim_objs
+SUB Draw_Aobjs
     DIM AObj, spr&, x, y, w, h
     DIM i: FOR i = 1 TO UBOUND(AObjs)
         AObj = Aobjs(i).obj
@@ -28,7 +29,8 @@ SUB Draw_Anim_objs
     NEXT i
 END SUB
 
-SUB Clear_Anim_objs
+SUB Clear_Aobjs
+	Clear_Anims
     REDIM Aobjs(0) AS Aobj
 END SUB
 
@@ -88,6 +90,7 @@ SUB Play_Anim (Aobj AS Aobj, i)
 END SUB
 
 SUB Clear_Anims
+	Clear_Sprites
     REDIM Anims(0) AS Anim
 END SUB
 
@@ -98,8 +101,7 @@ END SUB
 ' SPRITES
 '_____________________________________________________________________________
 FUNCTION add_sprite& (path$, i)
-	dim i$
-	i$ = LTRIM$(STR$(i))
+	dim i$:	i$ = LTRIM$(STR$(i))
     add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
 
     IF add_sprite& < -1 THEN
