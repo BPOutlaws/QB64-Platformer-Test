@@ -1,49 +1,40 @@
-'TODO
-'X put TYPEs in Sub lol
-'* convert everyting to use Obj injection
-'- clear sprites on level load etc
-'+ rename to Anim_obj
-'- cleared by Anim_obj?
-'   ie - duplicate array then FOR...NEXT, if match, skip (though everyones
-'   start & end pointers would need to be updated hmm...
-'   start could be an index and end could be relative...bit easier
-
 OPTION _EXPLICIT
 
-TYPE Object
+TYPE Obj
     x AS SINGLE
     y AS SINGLE
 END TYPE
 
-TYPE Anim_obj
-    obj_index AS SINGLE
+TYPE Aobj
+    obj AS SINGLE
 
     anim AS INTEGER
-    sprite AS INTEGER
+    spr AS INTEGER
     t_anim AS SINGLE
 
-    anim_idle AS INTEGER
-    anim_run AS INTEGER
+    a_IDLE AS INTEGER
+    a_RUN AS INTEGER
 END TYPE
 
 TYPE Anim
-    sprite_index AS INTEGER
-    num_frames AS INTEGER
-    speed AS SINGLE
+    spr AS INTEGER
+    frames AS INTEGER
+    dur AS SINGLE
 END TYPE
 
 TYPE Sprite
-    sprite AS LONG
+    spr AS LONG
 END TYPE
 
-CONST TRUE = -1, FALSE = 0, DEBUG = FALSE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
+CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 
-REDIM SHARED Anim_objs(0) AS Anim_obj, Anims(0) AS Anim, Sprites(0) AS Sprite
-REDIM SHARED Objects(0) AS Object
+REDIM SHARED Aobjs(0) AS Aobj, Anims(0) AS Anim, Sprites(0) AS Sprite
 
+REDIM SHARED Objs(0) AS Obj
 CONST PATH_SPRITES$ = "assets\sprites\", PATH_PLAYER$ = PATH_SPRITES + "adventurer\adventurer-"
 
+CONST PLAYER = 1
 
 
 '_____________________________________________________________________________
@@ -52,27 +43,14 @@ CONST PATH_SPRITES$ = "assets\sprites\", PATH_PLAYER$ = PATH_SPRITES + "adventur
 '_____________________________________________________________________________
 Init_Screen
 
-Add_Anim_obj 0, 0, 1
-'AO(1).anim_idle = Add_Anim(10, PATH_PLAYER + "idle-2-0")
-'AO(1).anim_run = Add_Anim(5, PATH_PLAYER + "run3-0")
+Add_Anim_obj
+Aobjs(PLAYER).a_IDLE = Add_Anim(10, PATH_PLAYER + "idle-2-0")
+Aobjs(PLAYER).a_RUN = Add_Anim(5, PATH_PLAYER + "run3-0")
 
-'REDIM _PRESERVE Objs(1) AS Obj
-'Objs(1).x = 200
-'Objs(1).y = 50
-
-
-
-
-
-
-
-Add_Anim_obj 0, 0, 1
-Anim_objs(1).anim_idle = Add_Anim(10, PATH_PLAYER + "idle-2-0")
-Anim_objs(1).anim_run = Add_Anim(5, PATH_PLAYER + "run3-0")
-
-REDIM _PRESERVE Objects(1) AS Object
-Objects(1).x = 200
-Objects(1).y = 50
+REDIM _PRESERVE Objs(1) AS Obj
+Objs(PLAYER).x = 200
+Objs(PLAYER).y = 50
+Start_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
 
 DO
     CLS
@@ -92,11 +70,11 @@ Clear_Sprites
 '_____________________________________________________________________________
 SUB Do_Input
     IF _KEYDOWN(KEY_RIGHT) THEN
-        Play_Anim Anim_objs(1), Anim_objs(1).anim_run
+        Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_RUN
     END IF
 
     IF _KEYDOWN(KEY_LEFT) THEN
-        Play_Anim Anim_objs(1), Anim_objs(1).anim_idle
+        Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
     END IF
 END SUB
 
@@ -106,33 +84,34 @@ END SUB
 '
 ' OBJECTS
 '_____________________________________________________________________________
-SUB Add_Anim_obj (x, y, obj_index)
-    REDIM _PRESERVE Anim_objs(UBOUND(Anim_Objs) + 1) AS Anim_obj
-    DIM i: i = UBOUND(Anim_Objs)
-
-    Anim_objs(i).obj_index = obj_index
+SUB Add_Anim_obj
+    REDIM _PRESERVE Aobjs(UBOUND(AObjs) + 1) AS Aobj
+    DIM i: i = UBOUND(AObjs)
+    Aobjs(i).obj = i
 END SUB
 
 SUB Update_Anim_objs
-    DIM i: FOR i = 1 TO UBOUND(Anim_objs)
-        Update_Anim Anim_objs(i)
+    DIM i: FOR i = 1 TO UBOUND(AObjs)
+        Update_Anim Aobjs(i)
     NEXT i
 END SUB
 
 SUB Draw_Anim_objs
-    DIM AO, sprite&, x, y
-    DIM i: FOR i = 1 TO UBOUND(Anim_objs)
-        AO = Anim_objs(i).obj_index
-        x = Objects(AO).x
-        y = Objects(AO).y
-        sprite& = Sprites(Anim_objs(i).sprite).sprite
+    DIM AObj, spr&, x, y, w, h
+    DIM i: FOR i = 1 TO UBOUND(AObjs)
+        AObj = Aobjs(i).obj
+        spr& = Sprites(Aobjs(i).spr).spr
+        x = Objs(AObj).x
+        y = Objs(AObj).y
+        w = _WIDTH(spr&)
+        h = _HEIGHT(spr&)
 
-        _PUTIMAGE (x, y)-(x + _WIDTH(sprite&), y + _HEIGHT(sprite&)), sprite&
+        _PUTIMAGE (x, y)-(x + _WIDTH(spr&), y + _HEIGHT(spr&)), spr&
     NEXT i
 END SUB
 
 SUB Clear_Anim_objs
-    REDIM Anim_objs(0) AS Anim_obj
+    REDIM Aobjs(0) AS Aobj
 END SUB
 
 
@@ -141,48 +120,55 @@ END SUB
 '
 ' ANIMATIONS
 '_____________________________________________________________________________
-FUNCTION Add_Anim (speed, path$)
+FUNCTION Add_Anim (dur, path$)
     REDIM _PRESERVE Anims(UBOUND(Anims) + 1) AS Anim
 
     Add_Anim = UBOUND(Anims)
-    Anims(Add_Anim).speed = speed
-    Anims(Add_Anim).sprite_index = UBOUND(Sprites) + 1
+    Anims(Add_Anim).dur = dur
+    Anims(Add_Anim).spr = UBOUND(Sprites) + 1
 
-    DIM i, sprite&: i = 0
+    DIM i, spr&: i = 0
 
     DO
-        sprite& = add_sprite&(path$, i)
+        spr& = add_sprite&(path$, i)
         i = i + 1
-    LOOP WHILE sprite& < -1
+    LOOP WHILE spr& < -1
 
-    Anims(Add_Anim).num_frames = i - 1
+    Anims(Add_Anim).frames = i - 1
+
+    IF DEBUG = TRUE THEN SLEEP
 END FUNCTION
 
 
 
-SUB Update_Anim (AO AS Anim_obj)
-    DIM Anim AS Anim: Anim = Anims(AO.anim)
+SUB Update_Anim (Aobj AS Aobj)
+    DIM Anim AS Anim: Anim = Anims(Aobj.anim)
 
-    IF AO.t_anim > 0 THEN
-        AO.t_anim = AO.t_anim - 1
+    IF Aobj.t_anim > 0 THEN
+        Aobj.t_anim = Aobj.t_anim - 1
     ELSE
-        AO.t_anim = Anim.speed
-        AO.sprite = AO.sprite + 1
+        Aobj.t_anim = Anim.dur
+        Aobj.spr = Aobj.spr + 1
 
-        IF AO.sprite >= Anim.sprite_index + Anim.num_frames THEN
-            AO.sprite = Anim.sprite_index
+        IF Aobj.spr >= Anim.spr + Anim.frames THEN
+            Aobj.spr = Anim.spr
         END IF
     END IF
 
-    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT AO.sprite
+    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT Aobj.spr
 END SUB
 
-SUB Play_Anim (AO AS Anim_obj, i)
+SUB Start_Anim (Aobj AS Aobj, i)
     DIM Anim AS Anim: Anim = Anims(i)
 
-    AO.anim = i
-    AO.t_anim = Anim.speed
-    AO.sprite = Anim.sprite_index
+    Aobj.anim = i
+    Aobj.t_anim = Anim.dur
+    Aobj.spr = Anim.spr
+END SUB
+
+SUB Play_Anim (Aobj AS Aobj, i)
+    IF Aobj.anim = i THEN EXIT SUB
+    Start_Anim Aobj, i
 END SUB
 
 SUB Clear_Anims
@@ -200,15 +186,15 @@ FUNCTION add_sprite& (path$, i)
 
     IF add_sprite& < -1 THEN
         REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
-        Sprites(UBOUND(Sprites)).sprite = add_sprite&
+        Sprites(UBOUND(Sprites)).spr = add_sprite&
 
-        IF DEBUG = TRUE THEN PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites)): SLEEP
+        IF DEBUG = TRUE THEN PRINT path$ + char$(i) + " -> " + char$(UBOUND(Sprites))
     END IF
 END FUNCTION
 
 SUB Clear_Sprites
     DIM i: FOR i = 1 TO UBOUND(Sprites)
-        IF Sprites(i).sprite < -1 THEN _FREEIMAGE Sprites(i).sprite
+        IF Sprites(i).spr < -1 THEN _FREEIMAGE Sprites(i).spr
     NEXT i
 
     REDIM Sprites(0) AS Sprite
