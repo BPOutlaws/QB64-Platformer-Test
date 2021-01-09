@@ -1,9 +1,12 @@
-'ok got an idea...3 arrays but TYPEs use start & end pointers to them
-'and they can be cleared out when a new level is loaded
-'could they be cleared out by character?
-'ie - duplicate array then FOR...NEXT, if match, skip (though everyones
-'start & end pointers would need to be updated hmm...
-'start could be an index and end could be relative...bit easier
+'TODO
+'- put TYPEs in Sub lol
+'- convert everyting to use Obj injection
+'- clear sprites on level load etc
+'- rename to Anim_Obj
+'- cleared by Anim_Obj?
+'   ie - duplicate array then FOR...NEXT, if match, skip (though everyones
+'   start & end pointers would need to be updated hmm...
+'   start could be an index and end could be relative...bit easier
 
 OPTION _EXPLICIT
 
