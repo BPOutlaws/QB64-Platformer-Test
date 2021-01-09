@@ -2,15 +2,15 @@
 'X put TYPEs in Sub lol
 '* convert everyting to use Obj injection
 '- clear sprites on level load etc
-'+ rename to Anim_Obj
-'- cleared by Anim_Obj?
+'+ rename to Anim_obj
+'- cleared by Anim_obj?
 '   ie - duplicate array then FOR...NEXT, if match, skip (though everyones
 '   start & end pointers would need to be updated hmm...
 '   start could be an index and end could be relative...bit easier
 
 OPTION _EXPLICIT
 
-TYPE Object
+TYPE Anim_obj
     x AS SINGLE
     y AS SINGLE
 
@@ -35,7 +35,7 @@ END TYPE
 CONST TRUE = -1, FALSE = 0, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST KEY_UP = 18432, KEY_DOWN = 20480, KEY_LEFT = 19200, KEY_RIGHT = 19712, KEY_SPACE = 32, KEY_ESC = 27
 
-REDIM SHARED Objects(0) AS Object, Anims(0) AS Anim, Sprites(0) AS Sprite
+REDIM SHARED Anim_objs(0) AS Anim_obj, Anims(0) AS Anim, Sprites(0) AS Sprite
 
 '_____________________________________________________________________________
 '
@@ -43,16 +43,16 @@ REDIM SHARED Objects(0) AS Object, Anims(0) AS Anim, Sprites(0) AS Sprite
 '_____________________________________________________________________________
 Init_Screen
 
-Add_Object Objects(), 0, 0
-Objects(1).anim_idle = Add_Anim(10, "assets\sprites\adventurer\adventurer-idle-2-0")
-Objects(1).anim_run = Add_Anim(5, "assets\sprites\adventurer\adventurer-run3-0")
-Play_Anim Objects(1), Objects(1).anim_idle
+Add_Anim_obj Anim_objs(), 0, 0
+Anim_objs(1).anim_idle = Add_Anim(10, "assets\sprites\adventurer\adventurer-idle-2-0")
+Anim_objs(1).anim_run = Add_Anim(5, "assets\sprites\adventurer\adventurer-run3-0")
+Play_Anim Anim_objs(1), Anim_objs(1).anim_idle
 
 DO
     CLS
     Do_Input
-    Update_Objects
-    Draw_Objects
+    Update_Anim_objs
+    Draw_Anim_objs
     Draw_Screen
 LOOP UNTIL _KEYDOWN(KEY_ESC)
 
@@ -64,11 +64,11 @@ Cleanup_Sprites
 '_____________________________________________________________________________
 SUB Do_Input
     IF _KEYDOWN(KEY_RIGHT) THEN
-        Play_Anim Objects(1), Objects(1).anim_run
+        Play_Anim Anim_objs(1), Anim_objs(1).anim_run
     END IF
 
     IF _KEYDOWN(KEY_LEFT) THEN
-        Play_Anim Objects(1), Objects(1).anim_idle
+        Play_Anim Anim_objs(1), Anim_objs(1).anim_idle
     END IF
 END SUB
 
@@ -78,23 +78,23 @@ END SUB
 '
 ' OBJECTS
 '_____________________________________________________________________________
-SUB Add_Object (Os() AS Object, x, y)
-    REDIM _PRESERVE Os(UBOUND(Os) + 1) AS Object
-    DIM i: i = UBOUND(Os)
+SUB Add_Anim_obj (Anim_Objs() AS Anim_obj, x, y)
+    REDIM _PRESERVE Anim_Objs(UBOUND(Anim_Objs) + 1) AS Anim_obj
+    DIM i: i = UBOUND(Anim_Objs)
 
-    Os(i).x = x
-    Os(i).y = y
+    Anim_Objs(i).x = x
+    Anim_Objs(i).y = y
 END SUB
 
-SUB Update_Objects
-    DIM i: FOR i = 1 TO UBOUND(Objects)
-        Update_Anim Objects(i)
+SUB Update_Anim_objs
+    DIM i: FOR i = 1 TO UBOUND(Anim_objs)
+        Update_Anim Anim_objs(i)
     NEXT i
 END SUB
 
-SUB Draw_Objects
-    DIM i: FOR i = 1 TO UBOUND(Objects)
-        Draw_Sprite Sprites(Objects(i).sprite).sprite
+SUB Draw_Anim_objs
+    DIM i: FOR i = 1 TO UBOUND(Anim_objs)
+        Draw_Sprite Sprites(Anim_objs(i).sprite).sprite
     NEXT i
 END SUB
 
@@ -123,31 +123,31 @@ END FUNCTION
 
 
 
-SUB Update_Anim (O AS Object)
-    DIM A AS Anim: A = Anims(O.anim)
+SUB Update_Anim (AO AS Anim_obj)
+    DIM Anim AS Anim: Anim = Anims(AO.anim)
 
-    IF O.t_anim > 0 THEN
-        O.t_anim = O.t_anim - 1
+    IF AO.t_anim > 0 THEN
+        AO.t_anim = AO.t_anim - 1
     ELSE
-        O.t_anim = A.speed
-        O.sprite = O.sprite + 1
+        AO.t_anim = Anim.speed
+        AO.sprite = AO.sprite + 1
 
-        IF O.sprite >= A.sprite_index + A.num_frames THEN
-            O.sprite = A.sprite_index
+        IF AO.sprite >= Anim.sprite_index + Anim.num_frames THEN
+            AO.sprite = Anim.sprite_index
         END IF
     END IF
 
     LOCATE 1, 1
-    PRINT O.sprite
+    PRINT AO.sprite
 
 END SUB
 
-SUB Play_Anim (O AS Object, i)
-    DIM A AS Anim: A = Anims(i)
+SUB Play_Anim (AO AS Anim_obj, i)
+    DIM Anim AS Anim: Anim = Anims(i)
 
-    O.anim = i
-    O.t_anim = A.speed
-    O.sprite = A.sprite_index
+    AO.anim = i
+    AO.t_anim = Anim.speed
+    AO.sprite = Anim.sprite_index
 END SUB
 
 
@@ -157,7 +157,7 @@ END SUB
 
 
 
-'SUB Update_Anim (Obj AS Object)
+'SUB Update_Anim (Obj AS Anim_obj)
 '    DIM Anim AS Anim: Anim = Anims(Obj.anim)
 
 '    IF Obj.t_anim > 0 THEN
@@ -176,7 +176,7 @@ END SUB
 
 'END SUB
 
-'SUB Play_Anim (Obj AS Object, index)
+'SUB Play_Anim (Obj AS Anim_obj, index)
 '    DIM Anim AS Anim: Anim = Anims(index)
 
 '    Obj.anim = index
