@@ -3,14 +3,14 @@
 ' ANIMATION OBJECTS
 '_____________________________________________________________________________
 FUNCTION Add_Aobj
-    REDIM _PRESERVE Aobjs(UBOUND(AObjs) + 1) AS Aobj
+    REDIM _PRESERVE Aobjs(UBOUND(Aobjs) + 1) AS Aobj
 
-    Add_Aobj = UBOUND(AObjs)
+    Add_Aobj = UBOUND(Aobjs)
     Aobjs(Add_Aobj).obj = Add_Aobj
 END FUNCTION
 
 SUB Update_Aobjs
-    DIM i: FOR i = 1 TO UBOUND(AObjs)
+    DIM i: FOR i = 1 TO UBOUND(Aobjs)
         Update_Anim Aobjs(i)
     NEXT i
 END SUB

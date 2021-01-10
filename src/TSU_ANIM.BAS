@@ -1,7 +1,7 @@
 'TODO
-'- clean up PLAYER/WOMAN init
-'- move a_IDLE to TYPE Obj
-'   - refactor Anim_Obj & SUBs
+'* clean up PLAYER/WOMAN init
+'* move a_IDLE to TYPE Obj
+'   * refactor Anim_Obj & SUBs
 '- new sprites
 '- quick BG
 '   - parallax
@@ -13,7 +13,30 @@
 
 OPTION _EXPLICIT
 
-'$INCLUDE:'TSU_ANIM.BI'
+'_____________________________________________________________________________
+'
+'INCLUDE:'TSU_ANIM.BI'
+'_____________________________________________________________________________
+TYPE Aobj
+    obj AS SINGLE
+
+    anim AS INTEGER
+    spr AS INTEGER
+    t_anim AS SINGLE
+END TYPE
+
+TYPE Anim
+    spr AS INTEGER
+    frames AS INTEGER
+    dur AS SINGLE
+END TYPE
+
+TYPE Sprite
+    spr AS LONG
+END TYPE
+
+REDIM SHARED Aobjs(0) AS Aobj, Anims(0) AS Anim, Sprites(0) AS Sprite
+'_____________________________________________________________________________
 
 
 
@@ -24,6 +47,8 @@ TYPE Obj
     y_speed AS SINGLE
 
     a_IDLE AS SINGLE
+    a_WALK AS SINGLE
+    a_RUN AS INTEGER
 END TYPE
 
 CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
@@ -64,21 +89,21 @@ Clear_objs
 ' PLAYER
 '_____________________________________________________________________________
 SUB Init_Player
-    PLAYER = Add_Aobj
+    PLAYER = New_Obj(200, 50)
 
-    Aobjs(PLAYER).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
-    Aobjs(PLAYER).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
+    Objs(PLAYER).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
+    Objs(PLAYER).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
 
-    New_Obj Objs(), 200, 50, Aobjs(PLAYER).a_IDLE
+    Start_Anim Aobjs(PLAYER), Objs(PLAYER).a_IDLE
 END SUB
 
 SUB Do_Input
     IF _KEYDOWN(RIGHT) THEN
-        Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_RUN
+        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_RUN
     END IF
 
     IF _KEYDOWN(LEFT) THEN
-        Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
+        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_IDLE
     END IF
 END SUB
 
@@ -89,12 +114,11 @@ END SUB
 ' NPCs
 '_____________________________________________________________________________
 SUB Init_NPCs
-    WOMAN = Add_Aobj
+    WOMAN = New_Obj(100, 50)
 
-    Aobjs(WOMAN).a_IDLE = Add_Anim(10, P_WOMAN$ + "idle_")
-    'Aobjs(WOMAN).a_WALK = Add_Anim(5, P_WOMAN$ + "walk_")
+    Objs(WOMAN).a_IDLE = Add_Anim(10, P_WOMAN$ + "idle_")
 
-    New_Obj Objs(), 100, 50, Aobjs(WOMAN).a_IDLE
+    Start_Anim Aobjs(WOMAN), Objs(WOMAN).a_IDLE
 END SUB
 
 
@@ -103,15 +127,15 @@ END SUB
 '
 ' OBJECTS
 '_____________________________________________________________________________
-SUB New_Obj (Objs() AS Obj, x, y, anim)
+FUNCTION New_Obj (x, y)
+    New_Obj = Add_Aobj
+
     REDIM _PRESERVE Objs(UBOUND(Objs) + 1) AS Obj
     DIM i: i = UBOUND(Objs)
 
     Objs(i).x = x
     Objs(i).y = y
-
-    Start_Anim Aobjs(i), anim
-END SUB
+END FUNCTION
 
 SUB Update_objs
     Update_Aobjs
@@ -146,7 +170,146 @@ END SUB
 
 
 
-'$INCLUDE:'TSU_ANIM.BM'
+'_____________________________________________________________________________
+'
+' MISC
+'_____________________________________________________________________________
+FUNCTION Trim$ (num)
+    Trim$ = LTRIM$(STR$(num))
+END FUNCTION
+
+
+
+
+
+'_____________________________________________________________________________
+'
+'INCLUDE:'TSU_ANIM.BM'
+'_____________________________________________________________________________
+'
+' ANIMATION OBJECTS
+'_____________________________________________________________________________
+FUNCTION Add_Aobj
+    REDIM _PRESERVE Aobjs(UBOUND(Aobjs) + 1) AS Aobj
+
+    Add_Aobj = UBOUND(Aobjs)
+    Aobjs(Add_Aobj).obj = Add_Aobj
+END FUNCTION
+
+SUB Update_Aobjs
+    DIM i: FOR i = 1 TO UBOUND(Aobjs)
+        Update_Anim Aobjs(i)
+    NEXT i
+END SUB
+
+SUB Draw_Aobjs
+    DIM i: FOR i = 1 TO UBOUND(Aobjs)
+        Draw_Sprite Aobjs(i).obj, Sprites(Aobjs(i).spr).spr
+    NEXT i
+END SUB
+
+SUB Clear_Aobjs
+    Clear_Anims
+    REDIM Aobjs(0) AS Aobj
+END SUB
+
+
+
+'_____________________________________________________________________________
+'
+' ANIMATIONS
+'_____________________________________________________________________________
+FUNCTION Add_Anim (dur, path$)
+    REDIM _PRESERVE Anims(UBOUND(Anims) + 1) AS Anim
+
+    Add_Anim = UBOUND(Anims)
+    Anims(Add_Anim).dur = dur
+    Anims(Add_Anim).spr = UBOUND(Sprites) + 1
+
+    DIM i, spr&: i = 0
+
+    DO
+        spr& = add_sprite&(path$, i)
+        i = i + 1
+    LOOP WHILE spr& < -1
+
+    Anims(Add_Anim).frames = i - 1
+
+    IF DEBUG = TRUE THEN SLEEP
+END FUNCTION
+
+SUB Update_Anim (Aobj AS Aobj)
+    DIM Anim AS Anim: Anim = Anims(Aobj.anim)
+
+    IF Aobj.t_anim > 0 THEN
+        Aobj.t_anim = Aobj.t_anim - 1
+    ELSE
+        Aobj.t_anim = Anim.dur
+        Aobj.spr = Aobj.spr + 1
+
+        IF Aobj.spr >= Anim.spr + Anim.frames THEN
+            Aobj.spr = Anim.spr
+        END IF
+    END IF
+END SUB
+
+SUB Start_Anim (Aobj AS Aobj, i)
+    DIM Anim AS Anim: Anim = Anims(i)
+
+    Aobj.anim = i
+    Aobj.t_anim = Anim.dur
+    Aobj.spr = Anim.spr
+END SUB
+
+SUB Play_Anim (Aobj AS Aobj, i)
+    IF Aobj.anim = i THEN EXIT SUB
+    Start_Anim Aobj, i
+END SUB
+
+SUB Clear_Anims
+    Clear_Sprites
+    REDIM Anims(0) AS Anim
+END SUB
+
+
+
+'_____________________________________________________________________________
+'
+' SPRITES
+'_____________________________________________________________________________
+FUNCTION add_sprite& (path$, i)
+    DIM i$: i$ = Trim$(i)
+    add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
+
+    IF add_sprite& < -1 THEN
+        REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
+        Sprites(UBOUND(Sprites)).spr = add_sprite&
+
+        IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + Trim$(UBOUND(Sprites))
+    END IF
+END FUNCTION
+
+SUB Draw_Sprite (i, spr&)
+    DIM x, y, w, h
+
+    x = Objs(i).x
+    y = Objs(i).y
+    w = _WIDTH(spr&)
+    h = _HEIGHT(spr&)
+
+    _PUTIMAGE (x, y)-(x + w, y + h), spr&
+
+    IF DEBUG THEN _PRINTSTRING (x + (w / 3), y - 16), Trim$(Aobjs(i).spr - Anims(Aobjs(i).anim).spr), 0
+END SUB
+
+SUB Clear_Sprites
+    DIM i: FOR i = 1 TO UBOUND(Sprites)
+        IF Sprites(i).spr < -1 THEN _FREEIMAGE Sprites(i).spr
+    NEXT i
+
+    REDIM Sprites(0) AS Sprite
+END SUB
+'_____________________________________________________________________________
 
 
 

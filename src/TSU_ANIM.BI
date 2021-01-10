@@ -5,8 +5,8 @@ TYPE Aobj
     spr AS INTEGER
     t_anim AS SINGLE
 
-    a_IDLE AS INTEGER
-    a_RUN AS INTEGER
+    'a_IDLE AS INTEGER
+    'a_RUN AS INTEGER
 END TYPE
 
 TYPE Anim
