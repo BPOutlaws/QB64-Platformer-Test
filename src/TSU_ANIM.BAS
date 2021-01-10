@@ -1,3 +1,16 @@
+'TODO
+'- clean up PLAYER/WOMAN init
+'- move a_IDLE to TYPE Obj
+'   - refactor Anim_Obj & SUBs
+'- new sprites
+'- quick BG
+'   - parallax
+'- camera
+'   - TSU_CAMERA.BM
+'- collision
+'- music
+'- SFX
+
 OPTION _EXPLICIT
 
 '$INCLUDE:'TSU_ANIM.BI'
@@ -9,13 +22,18 @@ TYPE Obj
     y AS SINGLE
     x_speed AS SINGLE
     y_speed AS SINGLE
+
+    a_IDLE AS SINGLE
 END TYPE
 
 CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 1
 CONST UP = 18432, DOWN = 20480, LEFT = 19200, RIGHT = 19712, SPACE = 32, ESC = 27
 
 CONST P_SPR$ = "assets\sprites\"
-CONST PLAYER = 1, P_PLAYER$ = P_SPR$ + "hero\"
+CONST P_PLAYER$ = P_SPR$ + "hero\"
+CONST P_WOMAN$ = P_SPR$ + "woman\"
+
+COMMON SHARED PLAYER, WOMAN
 
 REDIM SHARED Objs(0) AS Obj
 
@@ -27,16 +45,13 @@ REDIM SHARED Objs(0) AS Obj
 '_____________________________________________________________________________
 Init_Screen
 Init_Player
-
-Clear_objs
-Init_Player
+Init_NPCs
 
 DO
     CLS
     Do_Input
     Update_objs
-    Update_Aobjs
-    Draw_Aobjs
+    Draw_objs
     Draw_Screen
 LOOP UNTIL _KEYDOWN(ESC)
 
@@ -49,12 +64,12 @@ Clear_objs
 ' PLAYER
 '_____________________________________________________________________________
 SUB Init_Player
-    DIM i: i = Add_Aobj
+    PLAYER = Add_Aobj
 
-    Aobjs(i).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
-    Aobjs(i).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
+    Aobjs(PLAYER).a_IDLE = Add_Anim(10, P_PLAYER$ + "idle_")
+    Aobjs(PLAYER).a_RUN = Add_Anim(5, P_PLAYER$ + "run_")
 
-    New_Obj Objs(), 200, 50, Aobjs(i).a_IDLE
+    New_Obj Objs(), 200, 50, Aobjs(PLAYER).a_IDLE
 END SUB
 
 SUB Do_Input
@@ -65,6 +80,21 @@ SUB Do_Input
     IF _KEYDOWN(LEFT) THEN
         Play_Anim Aobjs(PLAYER), Aobjs(PLAYER).a_IDLE
     END IF
+END SUB
+
+
+
+'_____________________________________________________________________________
+'
+' NPCs
+'_____________________________________________________________________________
+SUB Init_NPCs
+    WOMAN = Add_Aobj
+
+    Aobjs(WOMAN).a_IDLE = Add_Anim(10, P_WOMAN$ + "idle_")
+    'Aobjs(WOMAN).a_WALK = Add_Anim(5, P_WOMAN$ + "walk_")
+
+    New_Obj Objs(), 100, 50, Aobjs(WOMAN).a_IDLE
 END SUB
 
 
@@ -84,7 +114,11 @@ SUB New_Obj (Objs() AS Obj, x, y, anim)
 END SUB
 
 SUB Update_objs
+    Update_Aobjs
+END SUB
 
+SUB Draw_objs
+    Draw_Aobjs
 END SUB
 
 SUB Clear_objs
@@ -113,4 +147,6 @@ END SUB
 
 
 '$INCLUDE:'TSU_ANIM.BM'
+
+
 

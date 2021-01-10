@@ -16,21 +16,14 @@ SUB Update_Aobjs
 END SUB
 
 SUB Draw_Aobjs
-    DIM AObj, spr&, x, y, w, h
-    DIM i: FOR i = 1 TO UBOUND(AObjs)
-        AObj = Aobjs(i).obj
-        spr& = Sprites(Aobjs(i).spr).spr
-        x = Objs(AObj).x
-        y = Objs(AObj).y
-        w = _WIDTH(spr&)
-        h = _HEIGHT(spr&)
-
-        _PUTIMAGE (x, y)-(x + _WIDTH(spr&), y + _HEIGHT(spr&)), spr&
+    DIM Aobj, spr&, x, y, w, h
+    DIM i: FOR i = 1 TO UBOUND(Aobjs)
+        Draw_Sprite Aobjs(i).obj, Sprites(Aobjs(i).spr).spr
     NEXT i
 END SUB
 
 SUB Clear_Aobjs
-	Clear_Anims
+    Clear_Anims
     REDIM Aobjs(0) AS Aobj
 END SUB
 
@@ -73,7 +66,7 @@ SUB Update_Anim (Aobj AS Aobj)
         END IF
     END IF
 
-    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT Aobj.spr
+'    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT Aobj.spr
 END SUB
 
 SUB Start_Anim (Aobj AS Aobj, i)
@@ -90,7 +83,7 @@ SUB Play_Anim (Aobj AS Aobj, i)
 END SUB
 
 SUB Clear_Anims
-	Clear_Sprites
+    Clear_Sprites
     REDIM Anims(0) AS Anim
 END SUB
 
@@ -101,7 +94,7 @@ END SUB
 ' SPRITES
 '_____________________________________________________________________________
 FUNCTION add_sprite& (path$, i)
-	dim i$:	i$ = LTRIM$(STR$(i))
+    dim i$: i$ = LTRIM$(STR$(i))
     add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
 
     IF add_sprite& < -1 THEN
@@ -111,6 +104,18 @@ FUNCTION add_sprite& (path$, i)
         IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + LTRIM$(STR$(UBOUND(Sprites)))
     END IF
 END FUNCTION
+
+SUB Draw_Sprite (i, spr&)
+    DIM x, y, w, h
+
+    x = Objs(i).x
+    y = Objs(i).y
+    w = _WIDTH(spr&)
+    h = _HEIGHT(spr&)
+
+    _PUTIMAGE (x, y)-(x + w, y + h), spr&
+    '_PRINTSTRING (x, y), "TESTING", 0
+END SUB
 
 SUB Clear_Sprites
     DIM i: FOR i = 1 TO UBOUND(Sprites)
