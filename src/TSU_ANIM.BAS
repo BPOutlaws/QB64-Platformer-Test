@@ -2,7 +2,8 @@
 '* clean up PLAYER/WOMAN init
 '* move a_IDLE to TYPE Obj
 '   * refactor Anim_Obj & SUBs
-'+ new sprites
+'X new sprites
+'- mirror sprites
 '- quick BG
 '   - parallax
 '- camera
@@ -48,11 +49,9 @@ TYPE Obj
     x_speed AS SINGLE
     y_speed AS SINGLE
     x_fric AS SINGLE
-    y_fric AS SINGLE
 
     a_IDLE AS SINGLE
     a_WALK AS SINGLE
-    a_WALKBACK AS SINGLE
     a_RUN AS INTEGER
 END TYPE
 
@@ -65,7 +64,7 @@ COMMON SHARED PLAYER, WOMAN
 
 REDIM SHARED Objs(0) AS Obj
 
-CONST c_black = _RGB32(0, 40, 20)
+CONST c_bg = _RGB32(0, 20, 10)
 
 
 '_____________________________________________________________________________
@@ -77,7 +76,7 @@ Init_Player
 Init_NPCs
 
 DO
-    LINE (0, 0)-(GAME_WIDTH, GAME_HEIGHT), c_black, BF
+    LINE (0, 0)-(GAME_WIDTH, GAME_HEIGHT), c_bg, BF
     Do_Input
     Update_objs
     Draw_objs
@@ -93,44 +92,31 @@ Clear_objs
 ' PLAYER
 '_____________________________________________________________________________
 SUB Init_Player
-    PLAYER = New_Obj(100, 300, 0.8)
+    PLAYER = New_Obj(100, 100, 0.8)
 
-    Objs(PLAYER).a_IDLE = Add_Anim(4, P_SPR$ + "ken\idle_")
-    Objs(PLAYER).a_WALK = Add_Anim(4, P_SPR$ + "ken\walk_")
-    Objs(PLAYER).a_WALKBACK = Add_Anim(4, P_SPR$ + "ken\walkback_")
+    Objs(PLAYER).a_IDLE = Add_Anim(4, P_SPR$ + "hero\idle_")
+    Objs(PLAYER).a_RUN = Add_Anim(4, P_SPR$ + "hero\run_")
 
     Start_Anim Aobjs(PLAYER), Objs(PLAYER).a_IDLE
 END SUB
 
 SUB Do_Input
     IF _KEYDOWN(RIGHT) THEN
-        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_WALK
+        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_RUN
         Objs(PLAYER).x_speed = 3
     END IF
 
     IF _KEYDOWN(LEFT) THEN
-        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_WALKBACK
+        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_RUN
         Objs(PLAYER).x_speed = -3
-    END IF
-
-    IF _KEYDOWN(UP) THEN
-        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_WALK
-        Objs(PLAYER).y_speed = -1
-    END IF
-
-    IF _KEYDOWN(DOWN) THEN
-        Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_WALK
-        Objs(PLAYER).y_speed = 1
     END IF
 
     IF _KEYDOWN(LEFT) = FALSE AND _KEYDOWN(RIGHT) = FALSE THEN
         Play_Anim Aobjs(PLAYER), Objs(PLAYER).a_IDLE
         Objs(PLAYER).x_speed = Objs(PLAYER).x_speed * Objs(PLAYER).x_fric
-        Objs(PLAYER).y_speed = Objs(PLAYER).y_speed * Objs(PLAYER).y_fric
     END IF
 
     Objs(PLAYER).x = Objs(PLAYER).x + Objs(PLAYER).x_speed
-    Objs(PLAYER).y = Objs(PLAYER).y + Objs(PLAYER).y_speed
 END SUB
 
 
@@ -140,7 +126,7 @@ END SUB
 ' NPCs
 '_____________________________________________________________________________
 SUB Init_NPCs
-    WOMAN = New_Obj(100, 50, 0.8)
+    WOMAN = New_Obj(100, 150, 0.8)
 
     Objs(WOMAN).a_IDLE = Add_Anim(10, P_SPR$ + "woman\idle_")
 
@@ -162,7 +148,6 @@ FUNCTION New_Obj (x, y, x_fric)
     Objs(i).x = x
     Objs(i).y = y
     Objs(i).x_fric = x_fric
-    Objs(i).y_fric = x_fric
 END FUNCTION
 
 SUB Update_objs
@@ -325,10 +310,14 @@ SUB Draw_Sprite (i, spr&)
     w = _WIDTH(spr&)
     h = _HEIGHT(spr&)
 
-    '    _PUTIMAGE (x, y)-(x + w, y + h), spr&
-    '    _PUTIMAGE (x - (w / 2), y - h)-((x - (w / 2)) + w, (y - h) + h), spr&
+    'top-left
+    '_PUTIMAGE (x, y)-(x + w, y + h), spr&
 
-    _PUTIMAGE (x - (w / 2) + w, y - h)-((x - (w / 2)), (y - h) + h), spr&
+    'centered
+    _PUTIMAGE (x - (w / 2), y - h)-((x - (w / 2)) + w, (y - h) + h), spr&
+
+    'mirrored
+    '_PUTIMAGE (x - (w / 2) + w, y - h)-((x - (w / 2)), (y - h) + h), spr&
 
     IF DEBUG THEN _PRINTSTRING (x + (w / 3), y - 16), Trim$(Aobjs(i).spr - Anims(Aobjs(i).anim).spr), 0
 END SUB
