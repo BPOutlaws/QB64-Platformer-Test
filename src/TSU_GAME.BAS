@@ -1,14 +1,9 @@
 'TODO
-'* split into separate files
-'* clean up PLAYER/WOMAN init
-'* move a_IDLE to TYPE Obj
-'   * refactor Anim_Obj & SUBs
-'X new sprites
-'- mirror sprites
 '- quick BG
 '   - parallax
 '- camera
 '   - TSU_CAMERA.BM
+'- mirror sprites
 '- collision
 '- music
 '- SFX
@@ -33,14 +28,12 @@ END TYPE
 
 CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
 CONST UP = 18432, DOWN = 20480, LEFT = 19200, RIGHT = 19712, SPACE = 32, ESC = 27
-
-CONST P_SPR$ = "..\assets\sprites\"
-
-COMMON SHARED PLAYER, WOMAN
+CONST TILE_SIZE = 16, P_SPR$ = "..\assets\sprites\", c_bg = _RGB32(0, 0, 0)
 
 REDIM SHARED Objs(0) AS Obj
 
-CONST c_bg = _RGB32(0, 20, 10)
+COMMON SHARED PLAYER, WOMAN, tiles&
+
 
 
 '_____________________________________________________________________________
@@ -48,6 +41,7 @@ CONST c_bg = _RGB32(0, 20, 10)
 ' GAME
 '_____________________________________________________________________________
 Init_Screen
+Init_Tiles
 Init_Player
 Init_NPCs
 
@@ -56,12 +50,39 @@ DO
     Do_Input
     Update_objs
     Draw_objs
+
+    Draw_Tiles
+
     Draw_Screen
 LOOP UNTIL _KEYDOWN(ESC)
 
 Clear_objs
 
 
+
+'_____________________________________________________________________________
+'
+' TILES
+'_____________________________________________________________________________
+SUB Init_Tiles
+    tiles& = _LOADIMAGE("..\assets\BGs\tileset.png")
+END SUB
+
+SUB Draw_Tiles
+    DIM tx1, ty1, tx2, ty2, px1, py1, px2, py2
+
+    px1 = 176
+    py1 = 96
+    px2 = px1 + TILE_SIZE
+    py2 = py1 + TILE_SIZE
+
+    tx1 = 32
+    ty1 = 16
+    tx2 = tx1 + TILE_SIZE
+    ty2 = ty1 + TILE_SIZE
+
+    _PUTIMAGE (tx1, ty1)-(tx2, ty2), tiles&, , (px1, py1)-(px2, py2)
+END SUB
 
 '_____________________________________________________________________________
 '
