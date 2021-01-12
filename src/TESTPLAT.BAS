@@ -7,6 +7,9 @@
 'Animated Pixel Adventurer sprites by rvros (rvros.itch.io)
 '   https://rvros.itch.io/animated-pixel-hero
 
+'[01/12/2021] NOTES:
+'Just updated asset location to clean things up on GitHub (BPOutlaws)
+
 '[11/22/2020] NOTES:
 'Make sure Run/Output EXE to Source Folder is on so it can find the assets
 
@@ -198,7 +201,7 @@ END SUB
 ' BACKGROUNDS
 '_____________________________________________________________________________
 SUB Init_BG
-    bg = _LOADIMAGE("assets\BGs\environment-preview.png")
+    bg = _LOADIMAGE("..\assets\BGs\environment-preview.png")
 END SUB
 
 SUB Draw_BG
@@ -221,9 +224,9 @@ SUB Init_Anims
     spr_index = 0: anim_index = 0
 
     'duration, sprite filename (minus the frame number at the end), number of frames
-    Load_Anim 10, "adventurer-idle-2-0", 4
-    Load_Anim 5, "adventurer-run3-0", 6
-    Load_Anim 5, "adventurer-attack2-0", 6
+    Load_Anim 10, "hero\idle_", 4
+    Load_Anim 5, "hero\run_", 6
+    Load_Anim 5, "hero\attack_", 6
     'throw frames in the /assets/ dir and you can add Anims with just one line
     'but you'd want to define some CONST ANIM_NAME's up above for readability
 END SUB
@@ -255,7 +258,7 @@ SUB Load_Sprites (filename$, num_frames)
         REDIM _PRESERVE Sprites(0 TO spr_index) AS LONG
 
         'separate path$ for easier readability
-        path$ = "assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
+        path$ = "..\assets\sprites\" + filename$ + LTRIM$(STR$(i)) + ".png"
 
         '_LOADIMAGE into the newly created empty last index of Sprites
         Sprites(UBOUND(Sprites)) = _LOADIMAGE(path$)
