@@ -1,12 +1,20 @@
 'TODO
-'- quick BG
+'+ quick BG
+'   * loading from LDtk (can't believe that worked lol)
+'       - only basic tileset source x/y and destination pixel x/y work
+'       - paste "gridTiles" into https://onlinejsontools.com/minify-json
+'       - paste that in https://jsonpath.com/ using $.gridTiles[:].[px,src]
+'       - paste THAT in Notepad++ and replace [, ], \n, \r with ""
+'       - paste THAT under TILESET: as DATA
 '   - parallax
-'- camera
-'   - TSU_CAMERA.BM
-'- mirror sprites
 '- collision
-'- music
-'- SFX
+'TSU_ANIM
+'   - mirror sprites
+'TSU_CAMERA
+'   - camera
+'TSU_AUDIO
+'   - music
+'   - SFX
 
 OPTION _EXPLICIT
 
@@ -26,13 +34,20 @@ TYPE Obj
     a_RUN AS INTEGER
 END TYPE
 
+TYPE Tile
+    x AS SINGLE
+    y AS SINGLE
+    tx AS INTEGER
+    ty AS INTEGER
+END TYPE
+
 CONST TRUE = -1, FALSE = 0, DEBUG = TRUE, GAME_WIDTH = 320, GAME_HEIGHT = 240, WINDOW_SCALE = 2
 CONST UP = 18432, DOWN = 20480, LEFT = 19200, RIGHT = 19712, SPACE = 32, ESC = 27
 CONST TILE_SIZE = 16, P_SPR$ = "..\assets\sprites\", c_bg = _RGB32(0, 0, 0)
 
-REDIM SHARED Objs(0) AS Obj
+REDIM SHARED Objs(0) AS Obj, Tiles(0) AS Tile
 
-COMMON SHARED PLAYER, WOMAN, tiles&
+COMMON SHARED PLAYER, WOMAN, tileset&, layer1&
 
 
 
@@ -41,7 +56,11 @@ COMMON SHARED PLAYER, WOMAN, tiles&
 ' GAME
 '_____________________________________________________________________________
 Init_Screen
+
+Load_Tiles
+Tiles_Loaded: ON ERROR GOTO 0
 Init_Tiles
+
 Init_Player
 Init_NPCs
 
@@ -49,10 +68,9 @@ DO
     LINE (0, 0)-(GAME_WIDTH, GAME_HEIGHT), c_bg, BF
     Do_Input
     Update_objs
-    Draw_objs
 
     Draw_Tiles
-
+    Draw_objs
     Draw_Screen
 LOOP UNTIL _KEYDOWN(ESC)
 
@@ -60,29 +78,52 @@ Clear_objs
 
 
 
+TILESET:
+DATA 0,0,176,96,16,0,0,0
+
+
+
 '_____________________________________________________________________________
 '
 ' TILES
 '_____________________________________________________________________________
+SUB Load_Tiles
+    tileset& = _LOADIMAGE("..\assets\BGs\tileset.png")
+
+    DIM i: i = 0: RESTORE TILESET
+    DO:
+        REDIM _PRESERVE Tiles(UBOUND(Tiles) + 1) AS Tile
+        READ Tiles(i).tx, Tiles(i).ty, Tiles(i).x, Tiles(i).y
+        ON ERROR GOTO Tiles_Loaded
+        i = i + 1
+    LOOP
+END SUB
+
 SUB Init_Tiles
-    tiles& = _LOADIMAGE("..\assets\BGs\tileset.png")
+    layer1& = _NEWIMAGE(GAME_WIDTH, GAME_HEIGHT, 32)
+
+    DIM i, tx1, ty1, tx2, ty2, x1, y1, x2, y2
+
+    FOR i = 0 TO UBOUND(Tiles)
+        tx1 = Tiles(i).tx
+        ty1 = Tiles(i).ty
+        tx2 = tx1 + TILE_SIZE
+        ty2 = ty1 + TILE_SIZE
+
+        x1 = Tiles(i).x
+        y1 = Tiles(i).y
+        x2 = x1 + TILE_SIZE
+        y2 = y1 + TILE_SIZE
+
+        _PUTIMAGE (tx1, ty1)-(tx2, ty2), tileset&, layer1&, (x1, y1)-(x2, y2)
+    NEXT i
 END SUB
 
 SUB Draw_Tiles
-    DIM tx1, ty1, tx2, ty2, px1, py1, px2, py2
-
-    px1 = 176
-    py1 = 96
-    px2 = px1 + TILE_SIZE
-    py2 = py1 + TILE_SIZE
-
-    tx1 = 32
-    ty1 = 16
-    tx2 = tx1 + TILE_SIZE
-    ty2 = ty1 + TILE_SIZE
-
-    _PUTIMAGE (tx1, ty1)-(tx2, ty2), tiles&, , (px1, py1)-(px2, py2)
+    _PUTIMAGE (0, 0), layer1&
 END SUB
+
+
 
 '_____________________________________________________________________________
 '
