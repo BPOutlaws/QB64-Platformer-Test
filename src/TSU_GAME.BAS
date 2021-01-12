@@ -1,5 +1,5 @@
 'TODO
-'- split into separate files
+'* split into separate files
 '* clean up PLAYER/WOMAN init
 '* move a_IDLE to TYPE Obj
 '   * refactor Anim_Obj & SUBs
