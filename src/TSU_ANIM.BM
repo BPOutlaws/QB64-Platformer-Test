@@ -16,7 +16,6 @@ SUB Update_Aobjs
 END SUB
 
 SUB Draw_Aobjs
-    DIM Aobj, spr&, x, y, w, h
     DIM i: FOR i = 1 TO UBOUND(Aobjs)
         Draw_Sprite Aobjs(i).obj, Sprites(Aobjs(i).spr).spr
     NEXT i
@@ -65,8 +64,6 @@ SUB Update_Anim (Aobj AS Aobj)
             Aobj.spr = Anim.spr
         END IF
     END IF
-
-'    IF DEBUG = TRUE THEN LOCATE 1, 1: PRINT Aobj.spr
 END SUB
 
 SUB Start_Anim (Aobj AS Aobj, i)
@@ -94,14 +91,14 @@ END SUB
 ' SPRITES
 '_____________________________________________________________________________
 FUNCTION add_sprite& (path$, i)
-    dim i$: i$ = LTRIM$(STR$(i))
+    DIM i$: i$ = Trim$(i)
     add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
 
     IF add_sprite& < -1 THEN
         REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
         Sprites(UBOUND(Sprites)).spr = add_sprite&
 
-        IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + LTRIM$(STR$(UBOUND(Sprites)))
+        IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + Trim$(UBOUND(Sprites))
     END IF
 END FUNCTION
 
@@ -113,8 +110,16 @@ SUB Draw_Sprite (i, spr&)
     w = _WIDTH(spr&)
     h = _HEIGHT(spr&)
 
-    _PUTIMAGE (x, y)-(x + w, y + h), spr&
-    '_PRINTSTRING (x, y), "TESTING", 0
+    'top-left
+    '_PUTIMAGE (x, y)-(x + w, y + h), spr&
+
+    'centered
+    _PUTIMAGE (x - (w / 2), y - h)-((x - (w / 2)) + w, (y - h) + h), spr&
+
+    'mirrored
+    '_PUTIMAGE (x - (w / 2) + w, y - h)-((x - (w / 2)), (y - h) + h), spr&
+
+    IF DEBUG THEN _PRINTSTRING (x + (w / 3), y - 16), Trim$(Aobjs(i).spr - Anims(Aobjs(i).anim).spr), 0
 END SUB
 
 SUB Clear_Sprites
@@ -124,3 +129,5 @@ SUB Clear_Sprites
 
     REDIM Sprites(0) AS Sprite
 END SUB
+
+

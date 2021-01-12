@@ -1,4 +1,5 @@
 'TODO
+'- split into separate files
 '* clean up PLAYER/WOMAN init
 '* move a_IDLE to TYPE Obj
 '   * refactor Anim_Obj & SUBs
@@ -14,32 +15,7 @@
 
 OPTION _EXPLICIT
 
-
-
-'_____________________________________________________________________________
-'
-'INCLUDE:'TSU_ANIM.BI'
-'_____________________________________________________________________________
-TYPE Aobj
-    obj AS SINGLE
-
-    anim AS INTEGER
-    spr AS INTEGER
-    t_anim AS SINGLE
-END TYPE
-
-TYPE Anim
-    spr AS INTEGER
-    frames AS INTEGER
-    dur AS SINGLE
-END TYPE
-
-TYPE Sprite
-    spr AS LONG
-END TYPE
-
-REDIM SHARED Aobjs(0) AS Aobj, Anims(0) AS Anim, Sprites(0) AS Sprite
-'_____________________________________________________________________________
+'$INCLUDE:'TSU_ANIM.BI'
 
 
 
@@ -193,143 +169,7 @@ END FUNCTION
 
 
 
-
-
-'_____________________________________________________________________________
-'
-'INCLUDE:'TSU_ANIM.BM'
-'_____________________________________________________________________________
-'
-' ANIMATION OBJECTS
-'_____________________________________________________________________________
-FUNCTION Add_Aobj
-    REDIM _PRESERVE Aobjs(UBOUND(Aobjs) + 1) AS Aobj
-
-    Add_Aobj = UBOUND(Aobjs)
-    Aobjs(Add_Aobj).obj = Add_Aobj
-END FUNCTION
-
-SUB Update_Aobjs
-    DIM i: FOR i = 1 TO UBOUND(Aobjs)
-        Update_Anim Aobjs(i)
-    NEXT i
-END SUB
-
-SUB Draw_Aobjs
-    DIM i: FOR i = 1 TO UBOUND(Aobjs)
-        Draw_Sprite Aobjs(i).obj, Sprites(Aobjs(i).spr).spr
-    NEXT i
-END SUB
-
-SUB Clear_Aobjs
-    Clear_Anims
-    REDIM Aobjs(0) AS Aobj
-END SUB
-
-
-
-'_____________________________________________________________________________
-'
-' ANIMATIONS
-'_____________________________________________________________________________
-FUNCTION Add_Anim (dur, path$)
-    REDIM _PRESERVE Anims(UBOUND(Anims) + 1) AS Anim
-
-    Add_Anim = UBOUND(Anims)
-    Anims(Add_Anim).dur = dur
-    Anims(Add_Anim).spr = UBOUND(Sprites) + 1
-
-    DIM i, spr&: i = 0
-
-    DO
-        spr& = add_sprite&(path$, i)
-        i = i + 1
-    LOOP WHILE spr& < -1
-
-    Anims(Add_Anim).frames = i - 1
-
-    IF DEBUG = TRUE THEN SLEEP
-END FUNCTION
-
-SUB Update_Anim (Aobj AS Aobj)
-    DIM Anim AS Anim: Anim = Anims(Aobj.anim)
-
-    IF Aobj.t_anim > 0 THEN
-        Aobj.t_anim = Aobj.t_anim - 1
-    ELSE
-        Aobj.t_anim = Anim.dur
-        Aobj.spr = Aobj.spr + 1
-
-        IF Aobj.spr >= Anim.spr + Anim.frames THEN
-            Aobj.spr = Anim.spr
-        END IF
-    END IF
-END SUB
-
-SUB Start_Anim (Aobj AS Aobj, i)
-    DIM Anim AS Anim: Anim = Anims(i)
-
-    Aobj.anim = i
-    Aobj.t_anim = Anim.dur
-    Aobj.spr = Anim.spr
-END SUB
-
-SUB Play_Anim (Aobj AS Aobj, i)
-    IF Aobj.anim = i THEN EXIT SUB
-    Start_Anim Aobj, i
-END SUB
-
-SUB Clear_Anims
-    Clear_Sprites
-    REDIM Anims(0) AS Anim
-END SUB
-
-
-
-'_____________________________________________________________________________
-'
-' SPRITES
-'_____________________________________________________________________________
-FUNCTION add_sprite& (path$, i)
-    DIM i$: i$ = Trim$(i)
-    add_sprite& = _LOADIMAGE(path$ + i$ + ".png")
-
-    IF add_sprite& < -1 THEN
-        REDIM _PRESERVE Sprites(UBOUND(Sprites) + 1) AS Sprite
-        Sprites(UBOUND(Sprites)).spr = add_sprite&
-
-        IF DEBUG = TRUE THEN PRINT path$ + i$ + " -> " + Trim$(UBOUND(Sprites))
-    END IF
-END FUNCTION
-
-SUB Draw_Sprite (i, spr&)
-    DIM x, y, w, h
-
-    x = Objs(i).x
-    y = Objs(i).y
-    w = _WIDTH(spr&)
-    h = _HEIGHT(spr&)
-
-    'top-left
-    '_PUTIMAGE (x, y)-(x + w, y + h), spr&
-
-    'centered
-    _PUTIMAGE (x - (w / 2), y - h)-((x - (w / 2)) + w, (y - h) + h), spr&
-
-    'mirrored
-    '_PUTIMAGE (x - (w / 2) + w, y - h)-((x - (w / 2)), (y - h) + h), spr&
-
-    IF DEBUG THEN _PRINTSTRING (x + (w / 3), y - 16), Trim$(Aobjs(i).spr - Anims(Aobjs(i).anim).spr), 0
-END SUB
-
-SUB Clear_Sprites
-    DIM i: FOR i = 1 TO UBOUND(Sprites)
-        IF Sprites(i).spr < -1 THEN _FREEIMAGE Sprites(i).spr
-    NEXT i
-
-    REDIM Sprites(0) AS Sprite
-END SUB
-'_____________________________________________________________________________
+'$INCLUDE:'TSU_ANIM.BM'
 
 
 
