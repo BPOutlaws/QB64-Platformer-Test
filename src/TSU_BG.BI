@@ -1,0 +1,15 @@
+TYPE Tile
+    x AS SINGLE
+    y AS SINGLE
+    tx AS INTEGER
+    ty AS INTEGER
+END TYPE
+
+CONST TILE_SIZE = 16
+
+REDIM SHARED Tiles(0) AS Tile
+
+COMMON SHARED tileset&, layer1&
+
+TILESET:
+DATA 0,0,176,96,16,0,0,0
