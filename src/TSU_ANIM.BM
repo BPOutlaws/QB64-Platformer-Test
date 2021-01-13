@@ -110,6 +110,8 @@ SUB Draw_Sprite (i, spr&)
     w = _WIDTH(spr&)
     h = _HEIGHT(spr&)
 
+	'this is a mess lol come back to this later and make it pretty:
+
     'top-left
     '_PUTIMAGE (x, y)-(x + w, y + h), spr&
 
